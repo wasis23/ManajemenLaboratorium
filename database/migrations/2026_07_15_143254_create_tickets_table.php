@@ -1,0 +1,33 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    /**
+     * Run the migrations.
+     */
+    public function up(): void
+    {
+        Schema::create('tickets', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('aset_id')->constrained('asets')->onDelete('cascade');
+            $table->foreignId('user_id')->nullable()->constrained('users')->onDelete('set null');
+            $table->string('nama_pelapor');
+            $table->text('deskripsi_kerusakan');
+            $table->enum('status', ['dilaporkan', 'sedang_diperiksa', 'sedang_diperbaiki', 'selesai', 'tidak_bisa_diperbaiki'])->default('dilaporkan');
+            $table->text('solusi')->nullable();
+            $table->timestamps();
+        });
+    }
+
+    /**
+     * Reverse the migrations.
+     */
+    public function down(): void
+    {
+        Schema::dropIfExists('tickets');
+    }
+};
