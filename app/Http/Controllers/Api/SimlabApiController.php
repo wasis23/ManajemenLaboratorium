@@ -142,4 +142,43 @@ class SimlabApiController extends Controller
             'data' => $peminjaman
         ], 201);
     }
+
+    public function createAset(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'laboratorium_id' => 'required|exists:laboratoriums,id',
+            'kode_aset' => 'required|string|unique:asets,kode_aset',
+            'nama_aset' => 'required|string|max:255',
+            'jenis_aset' => 'required|in:statis,consumable,loanable',
+            'spesifikasi' => 'nullable|array',
+            'kondisi' => 'nullable|in:baik,rusak_ringan,rusak_berat',
+            'stok' => 'nullable|integer|min:0',
+            'posisi_meja' => 'nullable|integer|min:1'
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'errors' => $validator->errors()
+            ], 422);
+        }
+
+        $aset = Aset::create([
+            'laboratorium_id' => $request->laboratorium_id,
+            'kode_aset' => $request->kode_aset,
+            'nama_aset' => $request->nama_aset,
+            'jenis_aset' => $request->jenis_aset,
+            'spesifikasi' => $request->spesifikasi,
+            'kondisi' => $request->kondisi ?? 'baik',
+            'stok' => $request->stok ?? 1,
+            'posisi_meja' => $request->posisi_meja
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Aset created successfully.',
+            'data' => $aset
+        ], 201);
+    }
 }
+
