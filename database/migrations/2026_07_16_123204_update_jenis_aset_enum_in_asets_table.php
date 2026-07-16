@@ -17,6 +17,11 @@ return new class extends Migration
 
         // Set all existing assets' type to 'PC'
         \Illuminate\Support\Facades\DB::table('asets')->update(['jenis_aset' => 'PC']);
+
+        // Set assets starting with 'MN' to 'Monitor'
+        \Illuminate\Support\Facades\DB::table('asets')
+            ->where('nama_aset', 'like', 'MN%')
+            ->update(['jenis_aset' => 'Monitor']);
     }
 
     /**
