@@ -10,6 +10,17 @@ export default function Show({ laboratorium, asets, tickets, peminjamans }) {
     const activeTickets = tickets.filter(t => ['dilaporkan', 'sedang_diperiksa', 'sedang_diperbaiki'].includes(t.status)).length;
     const activeLoans = peminjamans.filter(p => p.status_peminjaman === 'dipinjam').length;
 
+    const countByCategory = (category) => {
+        return asets
+            .filter(a => a.jenis_aset === category)
+            .reduce((acc, curr) => acc + curr.stok, 0);
+    };
+
+    const countPC = countByCategory('PC');
+    const countMonitor = countByCategory('Monitor');
+    const countKeyboard = countByCategory('Keyboard');
+    const countMouse = countByCategory('Mouse');
+
     // Badges helper
     const getKondisiBadge = (kondisi) => {
         switch (kondisi) {
@@ -106,15 +117,32 @@ export default function Show({ laboratorium, asets, tickets, peminjamans }) {
                         </div>
                     </div>
 
-                    {/* Stat: Total Assets */}
+                    {/* Stat: Total Assets by Category */}
                     <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-950 flex flex-col justify-between">
                         <div>
-                            <span className="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">Total Stok Aset</span>
-                            <h3 className="text-3xl font-extrabold text-slate-900 dark:text-white mt-2">{totalAssets}</h3>
-                            <p className="text-[10px] text-slate-400 mt-2">{asets.length} jenis barang terdaftar</p>
+                            <span className="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 block mb-3">Stok Aset Per Kategori</span>
+                            <div className="grid grid-cols-2 gap-3">
+                                <div className="bg-slate-50 dark:bg-slate-900/60 p-2.5 rounded-xl border border-slate-100 dark:border-slate-800/80">
+                                    <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 block uppercase">PC</span>
+                                    <span className="text-lg font-black text-blue-600 dark:text-blue-400">{countPC} <span className="text-[10px] font-semibold text-slate-400">unit</span></span>
+                                </div>
+                                <div className="bg-slate-50 dark:bg-slate-900/60 p-2.5 rounded-xl border border-slate-100 dark:border-slate-800/80">
+                                    <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 block uppercase">Monitor</span>
+                                    <span className="text-lg font-black text-indigo-600 dark:text-indigo-400">{countMonitor} <span className="text-[10px] font-semibold text-slate-400">unit</span></span>
+                                </div>
+                                <div className="bg-slate-50 dark:bg-slate-900/60 p-2.5 rounded-xl border border-slate-100 dark:border-slate-800/80">
+                                    <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 block uppercase">Keyboard</span>
+                                    <span className="text-lg font-black text-emerald-600 dark:text-emerald-400">{countKeyboard} <span className="text-[10px] font-semibold text-slate-400">unit</span></span>
+                                </div>
+                                <div className="bg-slate-50 dark:bg-slate-900/60 p-2.5 rounded-xl border border-slate-100 dark:border-slate-800/80">
+                                    <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 block uppercase">Mouse</span>
+                                    <span className="text-lg font-black text-amber-600 dark:text-amber-400">{countMouse} <span className="text-[10px] font-semibold text-slate-400">unit</span></span>
+                                </div>
+                            </div>
                         </div>
-                        <div className="mt-4 text-xs font-bold text-blue-600 dark:text-blue-400">
-                            {asets.filter(a => a.jenis_aset === 'PC').length} PC &bull; {asets.filter(a => a.jenis_aset !== 'PC').length} Aksesoris
+                        <div className="mt-3 pt-2.5 border-t border-slate-100 dark:border-slate-900/80 text-[10px] font-bold text-slate-400 flex justify-between">
+                            <span>Total Seluruh Aset:</span>
+                            <span className="text-slate-700 dark:text-slate-300 font-extrabold">{totalAssets} Unit</span>
                         </div>
                     </div>
 
