@@ -82,7 +82,7 @@ export default function Scan({ aset, activeTickets }) {
                                 <div className="mt-5">
                                     <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Spesifikasi Alat</h3>
                                     <div className="rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800 p-4 text-xs space-y-2">
-                                        {aset.jenis_aset === 'statis' ? (
+                                        {aset.jenis_aset === 'PC' ? (
                                             <>
                                                 {aset.spesifikasi.cpu && <div className="flex justify-between"><span className="text-slate-500">Processor (CPU):</span> <span className="font-semibold">{aset.spesifikasi.cpu}</span></div>}
                                                 {aset.spesifikasi.ram && <div className="flex justify-between"><span className="text-slate-500">Memori (RAM):</span> <span className="font-semibold">{aset.spesifikasi.ram}</span></div>}

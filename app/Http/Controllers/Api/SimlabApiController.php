@@ -118,8 +118,15 @@ class SimlabApiController extends Controller
         $user = User::where('email', $request->email_peminjam)->first();
         $aset = Aset::findOrFail($request->aset_id);
 
-        // Check if stock is sufficient
-        if ($aset->jenis_aset === 'loanable' && $aset->stok < $request->jumlah) {
+        // Check if asset is borrowable and stock is sufficient
+        if (!in_array($aset->jenis_aset, ['Monitor', 'Keyboard', 'Mouse'])) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Aset ini tidak dapat dipinjam.'
+            ], 400);
+        }
+
+        if ($aset->stok < $request->jumlah) {
             return response()->json([
                 'success' => false,
                 'message' => 'Stok aset tidak mencukupi untuk dipinjam.'
@@ -149,7 +156,7 @@ class SimlabApiController extends Controller
             'laboratorium_id' => 'required|exists:laboratoriums,id',
             'kode_aset' => 'required|string|unique:asets,kode_aset',
             'nama_aset' => 'required|string|max:255',
-            'jenis_aset' => 'required|in:statis,consumable,loanable',
+            'jenis_aset' => 'required|in:PC,Monitor,Keyboard,Mouse',
             'spesifikasi' => 'nullable|array',
             'kondisi' => 'nullable|in:baik,rusak_ringan,rusak_berat',
             'stok' => 'nullable|integer|min:0',
@@ -196,7 +203,7 @@ class SimlabApiController extends Controller
             'laboratorium_id' => 'sometimes|required|exists:laboratoriums,id',
             'kode_aset' => 'sometimes|required|string|max:50|unique:asets,kode_aset,' . $aset->id,
             'nama_aset' => 'sometimes|required|string|max:255',
-            'jenis_aset' => 'sometimes|required|in:statis,consumable,loanable',
+            'jenis_aset' => 'sometimes|required|in:PC,Monitor,Keyboard,Mouse',
             'spesifikasi' => 'nullable|array',
             'kondisi' => 'sometimes|required|in:baik,rusak_ringan,rusak_berat',
             'stok' => 'sometimes|required|integer|min:0',

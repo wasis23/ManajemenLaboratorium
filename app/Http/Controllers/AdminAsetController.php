@@ -59,7 +59,7 @@ class AdminAsetController extends Controller
             'laboratorium_id' => 'required|exists:laboratoriums,id',
             'kode_aset' => 'required|string|unique:asets,kode_aset|max:50',
             'nama_aset' => 'required|string|max:255',
-            'jenis_aset' => 'required|in:statis,consumable,loanable',
+            'jenis_aset' => 'required|in:PC,Monitor,Keyboard,Mouse',
             'kondisi' => 'required|in:baik,rusak_ringan,rusak_berat',
             'stok' => 'required|integer|min:0',
             'posisi_meja' => 'nullable|integer|min:1',
@@ -73,7 +73,7 @@ class AdminAsetController extends Controller
         ]);
 
         $spesifikasi = [];
-        if ($request->jenis_aset === 'statis') {
+        if ($request->jenis_aset === 'PC') {
             $spesifikasi = [
                 'cpu' => $request->spec_cpu,
                 'ram' => $request->spec_ram,
@@ -113,7 +113,7 @@ class AdminAsetController extends Controller
             'laboratorium_id' => 'required|exists:laboratoriums,id',
             'kode_aset' => 'required|string|max:50|unique:asets,kode_aset,' . $aset->id,
             'nama_aset' => 'required|string|max:255',
-            'jenis_aset' => 'required|in:statis,consumable,loanable',
+            'jenis_aset' => 'required|in:PC,Monitor,Keyboard,Mouse',
             'kondisi' => 'required|in:baik,rusak_ringan,rusak_berat',
             'stok' => 'required|integer|min:0',
             'posisi_meja' => 'nullable|integer|min:1',
@@ -127,7 +127,7 @@ class AdminAsetController extends Controller
         ]);
 
         $spesifikasi = [];
-        if ($request->jenis_aset === 'statis') {
+        if ($request->jenis_aset === 'PC') {
             $spesifikasi = [
                 'cpu' => $request->spec_cpu,
                 'ram' => $request->spec_ram,

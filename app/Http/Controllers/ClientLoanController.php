@@ -47,7 +47,7 @@ class ClientLoanController extends Controller
         $search = $request->input('search');
 
         $query = Aset::with('laboratorium')
-            ->where('jenis_aset', 'loanable')
+            ->whereIn('jenis_aset', ['Monitor', 'Keyboard', 'Mouse'])
             ->where('kondisi', 'baik');
 
         if ($search) {
@@ -78,7 +78,7 @@ class ClientLoanController extends Controller
 
         $aset = Aset::findOrFail($request->aset_id);
 
-        if ($aset->jenis_aset !== 'loanable') {
+        if (!in_array($aset->jenis_aset, ['Monitor', 'Keyboard', 'Mouse'])) {
             return redirect()->back()->with('error', 'Aset ini tidak dapat dipinjam.');
         }
 

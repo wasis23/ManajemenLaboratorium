@@ -18,7 +18,7 @@ export default function Index({ asets, laboratoriums, filters }) {
         laboratorium_id: '',
         kode_aset: '',
         nama_aset: '',
-        jenis_aset: 'statis',
+        jenis_aset: 'PC',
         kondisi: 'baik',
         stok: 1,
         posisi_meja: '',
@@ -190,9 +190,10 @@ export default function Index({ asets, laboratoriums, filters }) {
                                 className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs dark:border-slate-800 dark:bg-slate-900 focus:outline-none"
                             >
                                 <option value="">Semua Jenis</option>
-                                <option value="statis">Statis</option>
-                                <option value="loanable">Loanable</option>
-                                <option value="consumable">Consumable</option>
+                                <option value="PC">PC</option>
+                                <option value="Monitor">Monitor</option>
+                                <option value="Keyboard">Keyboard</option>
+                                <option value="Mouse">Mouse</option>
                             </select>
                         </div>
 
@@ -277,8 +278,9 @@ export default function Index({ asets, laboratoriums, filters }) {
                                             </td>
                                             <td className="px-6 py-4">
                                                 <span className={`rounded-full px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider ${
-                                                    aset.jenis_aset === 'statis' ? 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400' :
-                                                    aset.jenis_aset === 'loanable' ? 'bg-violet-100 text-violet-700 dark:bg-violet-950/40 dark:text-violet-400' :
+                                                    aset.jenis_aset === 'PC' ? 'bg-blue-100 text-blue-700 dark:bg-blue-950/40 dark:text-blue-400' :
+                                                    aset.jenis_aset === 'Monitor' ? 'bg-indigo-100 text-indigo-700 dark:bg-indigo-950/40 dark:text-indigo-400' :
+                                                    aset.jenis_aset === 'Keyboard' ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-450' :
                                                     'bg-amber-100 text-amber-700 dark:bg-amber-950/40 dark:text-amber-400'
                                                 }`}>
                                                     {aset.jenis_aset}
@@ -401,9 +403,10 @@ export default function Index({ asets, laboratoriums, filters }) {
                                     className="w-full rounded-lg border border-slate-200/80 bg-slate-50 px-3 py-2 text-sm dark:border-slate-800 dark:bg-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
                                     required
                                 >
-                                    <option value="statis">Statis (PC, AC, Proyektor)</option>
-                                    <option value="loanable">Loanable (Bisa Dipinjam)</option>
-                                    <option value="consumable">Consumable (Bahan Habis)</option>
+                                    <option value="PC">PC</option>
+                                    <option value="Monitor">Monitor</option>
+                                    <option value="Keyboard">Keyboard</option>
+                                    <option value="Mouse">Mouse</option>
                                 </select>
                             </div>
                         </div>
@@ -447,9 +450,9 @@ export default function Index({ asets, laboratoriums, filters }) {
                         </div>
 
                         {/* Conditional Specs Input */}
-                        {data.jenis_aset === 'statis' ? (
+                        {data.jenis_aset === 'PC' ? (
                             <div className="border-t border-slate-100 pt-4 dark:border-slate-900 space-y-4">
-                                <h4 className="text-xs font-bold text-slate-455 uppercase tracking-wide">Spesifikasi PC Client (Statis)</h4>
+                                <h4 className="text-xs font-bold text-slate-455 uppercase tracking-wide">Spesifikasi PC Client</h4>
                                 <div className="grid grid-cols-2 gap-4">
                                     <div>
                                         <label className="block text-[11px] font-semibold text-slate-500 mb-1">Processor (CPU)</label>
@@ -507,7 +510,7 @@ export default function Index({ asets, laboratoriums, filters }) {
                             </div>
                         ) : (
                             <div className="border-t border-slate-100 pt-4 dark:border-slate-900 space-y-4">
-                                <h4 className="text-xs font-bold text-slate-455 uppercase tracking-wide">Detail Alat (Loanable / Consumable)</h4>
+                                <h4 className="text-xs font-bold text-slate-455 uppercase tracking-wide">Detail Alat (Monitor / Keyboard / Mouse)</h4>
                                 <div className="grid grid-cols-2 gap-4">
                                     <div>
                                         <label className="block text-[11px] font-semibold text-slate-500 mb-1">Merk / Brand</label>
@@ -609,9 +612,10 @@ export default function Index({ asets, laboratoriums, filters }) {
                                     className="w-full rounded-lg border border-slate-200/80 bg-slate-50 px-3 py-2 text-sm dark:border-slate-800 dark:bg-slate-900 focus:outline-none"
                                     required
                                 >
-                                    <option value="statis">Statis</option>
-                                    <option value="loanable">Loanable</option>
-                                    <option value="consumable">Consumable</option>
+                                    <option value="PC">PC</option>
+                                    <option value="Monitor">Monitor</option>
+                                    <option value="Keyboard">Keyboard</option>
+                                    <option value="Mouse">Mouse</option>
                                 </select>
                             </div>
                         </div>
@@ -652,9 +656,9 @@ export default function Index({ asets, laboratoriums, filters }) {
                             </div>
                         </div>
 
-                        {data.jenis_aset === 'statis' ? (
+                        {data.jenis_aset === 'PC' ? (
                             <div className="border-t border-slate-100 pt-4 dark:border-slate-900 space-y-4">
-                                <h4 className="text-xs font-bold text-slate-455 uppercase tracking-wide">Spesifikasi PC Client (Statis)</h4>
+                                <h4 className="text-xs font-bold text-slate-455 uppercase tracking-wide">Spesifikasi PC Client</h4>
                                 <div className="grid grid-cols-2 gap-4">
                                     <div>
                                         <label className="block text-[11px] font-semibold text-slate-500 mb-1">Processor (CPU)</label>
@@ -707,7 +711,7 @@ export default function Index({ asets, laboratoriums, filters }) {
                             </div>
                         ) : (
                             <div className="border-t border-slate-100 pt-4 dark:border-slate-900 space-y-4">
-                                <h4 className="text-xs font-bold text-slate-455 uppercase tracking-wide">Detail Alat (Loanable / Consumable)</h4>
+                                <h4 className="text-xs font-bold text-slate-455 uppercase tracking-wide">Detail Alat (Monitor / Keyboard / Mouse)</h4>
                                 <div className="grid grid-cols-2 gap-4">
                                     <div>
                                         <label className="block text-[11px] font-semibold text-slate-500 mb-1">Merk / Brand</label>

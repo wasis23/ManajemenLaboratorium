@@ -193,9 +193,10 @@ export default function Welcome({ auth, laboratoriums, asets, filters }) {
                                             className="w-full rounded-lg border border-slate-200/80 bg-slate-50 px-3 py-2 text-sm dark:border-slate-800 dark:bg-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
                                         >
                                             <option value="">Semua Jenis</option>
-                                            <option value="statis">Statis (PC, AC, Proyektor)</option>
-                                            <option value="loanable">Loanable (Bisa Dipinjam)</option>
-                                            <option value="consumable">Consumable (Bahan Habis)</option>
+                                            <option value="PC">PC</option>
+                                            <option value="Monitor">Monitor</option>
+                                            <option value="Keyboard">Keyboard</option>
+                                            <option value="Mouse">Mouse</option>
                                         </select>
                                     </div>
 
@@ -260,8 +261,9 @@ export default function Welcome({ auth, laboratoriums, asets, filters }) {
                                                     <div className="flex items-center gap-1.5">
                                                         {/* Jenis Badge */}
                                                         <span className={`text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded ${
-                                                            aset.jenis_aset === 'statis' ? 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400' :
-                                                            aset.jenis_aset === 'loanable' ? 'bg-violet-100 text-violet-700 dark:bg-violet-950/40 dark:text-violet-400' :
+                                                            aset.jenis_aset === 'PC' ? 'bg-blue-100 text-blue-700 dark:bg-blue-950/40 dark:text-blue-400' :
+                                                            aset.jenis_aset === 'Monitor' ? 'bg-indigo-100 text-indigo-700 dark:bg-indigo-950/40 dark:text-indigo-400' :
+                                                            aset.jenis_aset === 'Keyboard' ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-450' :
                                                             'bg-amber-100 text-amber-700 dark:bg-amber-950/40 dark:text-amber-400'
                                                         }`}>
                                                             {aset.jenis_aset}
@@ -285,7 +287,7 @@ export default function Welcome({ auth, laboratoriums, asets, filters }) {
                                                 {/* Specifications preview */}
                                                 {aset.spesifikasi && (
                                                     <div className="mt-3 bg-slate-50 dark:bg-slate-900/60 p-2.5 rounded-lg border border-slate-100 dark:border-slate-900 text-[11px] space-y-1 text-slate-600 dark:text-slate-400">
-                                                        {aset.jenis_aset === 'statis' ? (
+                                                        {aset.jenis_aset === 'PC' ? (
                                                             <>
                                                                 {aset.spesifikasi.cpu && <div><span className="font-semibold">CPU:</span> {aset.spesifikasi.cpu}</div>}
                                                                 {aset.spesifikasi.ram && <div><span className="font-semibold">RAM:</span> {aset.spesifikasi.ram}</div>}

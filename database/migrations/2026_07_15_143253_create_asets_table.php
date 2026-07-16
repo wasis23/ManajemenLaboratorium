@@ -16,7 +16,7 @@ return new class extends Migration
             $table->foreignId('laboratorium_id')->constrained('laboratoriums')->onDelete('cascade');
             $table->string('kode_aset')->unique(); // LAB-XX-YYYY format
             $table->string('nama_aset');
-            $table->enum('jenis_aset', ['statis', 'consumable', 'loanable']);
+            $table->string('jenis_aset'); // PC, Monitor, Keyboard, Mouse
             $table->json('spesifikasi')->nullable(); // JSON specs
             $table->enum('kondisi', ['baik', 'rusak_ringan', 'rusak_berat'])->default('baik');
             $table->integer('stok')->default(1);
