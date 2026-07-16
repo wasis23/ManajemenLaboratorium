@@ -21,6 +21,19 @@ export default function Show({ laboratorium, asets, tickets, peminjamans }) {
     const countKeyboard = countByCategory('Keyboard');
     const countMouse = countByCategory('Mouse');
 
+    const getKondisiStatsByCategory = (category) => {
+        const filtered = asets.filter(a => a.jenis_aset === category);
+        const baik = filtered.filter(a => a.kondisi === 'baik').reduce((acc, curr) => acc + curr.stok, 0);
+        const rusakRingan = filtered.filter(a => a.kondisi === 'rusak_ringan').reduce((acc, curr) => acc + curr.stok, 0);
+        const rusakBerat = filtered.filter(a => a.kondisi === 'rusak_berat').reduce((acc, curr) => acc + curr.stok, 0);
+        return { baik, rusakRingan, rusakBerat };
+    };
+
+    const statsPC = getKondisiStatsByCategory('PC');
+    const statsMonitor = getKondisiStatsByCategory('Monitor');
+    const statsKeyboard = getKondisiStatsByCategory('Keyboard');
+    const statsMouse = getKondisiStatsByCategory('Mouse');
+
     // Badges helper
     const getKondisiBadge = (kondisi) => {
         switch (kondisi) {
@@ -99,8 +112,108 @@ export default function Show({ laboratorium, asets, tickets, peminjamans }) {
             <div className="space-y-6">
                 {/* Laboratory Info & Statistics Cards */}
                 <div className="grid gap-6 md:grid-cols-4">
-                    {/* Lab Metadata Card */}
+                    {/* Stat: Total Assets by Category & Condition */}
                     <div className="md:col-span-2 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-950 flex flex-col justify-between">
+                        <div>
+                            <span className="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 block mb-4">Stok Aset Per Kategori & Kondisi</span>
+                            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                                {/* PC */}
+                                <div className="bg-slate-50 dark:bg-slate-900/60 p-3 rounded-xl border border-slate-100 dark:border-slate-800/80 flex flex-col justify-between">
+                                    <div>
+                                        <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 block uppercase">PC Client</span>
+                                        <span className="text-xl font-black text-blue-600 dark:text-blue-400">{countPC} <span className="text-[10px] font-semibold text-slate-400">unit</span></span>
+                                    </div>
+                                    <div className="mt-3 pt-2 border-t border-slate-100 dark:border-slate-800/60 space-y-1 text-[10px] font-bold text-slate-505">
+                                        <div className="flex justify-between items-center text-emerald-600 dark:text-emerald-450 font-semibold">
+                                            <span>Baik:</span>
+                                            <span>{statsPC.baik}</span>
+                                        </div>
+                                        <div className="flex justify-between items-center text-amber-600 dark:text-amber-400 font-semibold">
+                                            <span>R. Ringan:</span>
+                                            <span>{statsPC.rusakRingan}</span>
+                                        </div>
+                                        <div className="flex justify-between items-center text-rose-600 dark:text-rose-455 font-semibold">
+                                            <span>R. Berat:</span>
+                                            <span>{statsPC.rusakBerat}</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Monitor */}
+                                <div className="bg-slate-50 dark:bg-slate-900/60 p-3 rounded-xl border border-slate-100 dark:border-slate-800/80 flex flex-col justify-between">
+                                    <div>
+                                        <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 block uppercase">Monitor</span>
+                                        <span className="text-xl font-black text-indigo-600 dark:text-indigo-400">{countMonitor} <span className="text-[10px] font-semibold text-slate-400">unit</span></span>
+                                    </div>
+                                    <div className="mt-3 pt-2 border-t border-slate-100 dark:border-slate-800/60 space-y-1 text-[10px] font-bold text-slate-505">
+                                        <div className="flex justify-between items-center text-emerald-600 dark:text-emerald-450 font-semibold">
+                                            <span>Baik:</span>
+                                            <span>{statsMonitor.baik}</span>
+                                        </div>
+                                        <div className="flex justify-between items-center text-amber-600 dark:text-amber-400 font-semibold">
+                                            <span>R. Ringan:</span>
+                                            <span>{statsMonitor.rusakRingan}</span>
+                                        </div>
+                                        <div className="flex justify-between items-center text-rose-600 dark:text-rose-455 font-semibold">
+                                            <span>R. Berat:</span>
+                                            <span>{statsMonitor.rusakBerat}</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Keyboard */}
+                                <div className="bg-slate-50 dark:bg-slate-900/60 p-3 rounded-xl border border-slate-100 dark:border-slate-800/80 flex flex-col justify-between">
+                                    <div>
+                                        <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 block uppercase">Keyboard</span>
+                                        <span className="text-xl font-black text-emerald-600 dark:text-emerald-400">{countKeyboard} <span className="text-[10px] font-semibold text-slate-400">unit</span></span>
+                                    </div>
+                                    <div className="mt-3 pt-2 border-t border-slate-100 dark:border-slate-800/60 space-y-1 text-[10px] font-bold text-slate-505">
+                                        <div className="flex justify-between items-center text-emerald-600 dark:text-emerald-450 font-semibold">
+                                            <span>Baik:</span>
+                                            <span>{statsKeyboard.baik}</span>
+                                        </div>
+                                        <div className="flex justify-between items-center text-amber-600 dark:text-amber-400 font-semibold">
+                                            <span>R. Ringan:</span>
+                                            <span>{statsKeyboard.rusakRingan}</span>
+                                        </div>
+                                        <div className="flex justify-between items-center text-rose-600 dark:text-rose-455 font-semibold">
+                                            <span>R. Berat:</span>
+                                            <span>{statsKeyboard.rusakBerat}</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Mouse */}
+                                <div className="bg-slate-50 dark:bg-slate-900/60 p-3 rounded-xl border border-slate-100 dark:border-slate-800/80 flex flex-col justify-between">
+                                    <div>
+                                        <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 block uppercase">Mouse</span>
+                                        <span className="text-xl font-black text-amber-600 dark:text-amber-400">{countMouse} <span className="text-[10px] font-semibold text-slate-400">unit</span></span>
+                                    </div>
+                                    <div className="mt-3 pt-2 border-t border-slate-100 dark:border-slate-800/60 space-y-1 text-[10px] font-bold text-slate-505">
+                                        <div className="flex justify-between items-center text-emerald-600 dark:text-emerald-450 font-semibold">
+                                            <span>Baik:</span>
+                                            <span>{statsMouse.baik}</span>
+                                        </div>
+                                        <div className="flex justify-between items-center text-amber-600 dark:text-amber-400 font-semibold">
+                                            <span>R. Ringan:</span>
+                                            <span>{statsMouse.rusakRingan}</span>
+                                        </div>
+                                        <div className="flex justify-between items-center text-rose-600 dark:text-rose-455 font-semibold">
+                                            <span>R. Berat:</span>
+                                            <span>{statsMouse.rusakBerat}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div className="mt-4 pt-3 border-t border-slate-100 dark:border-slate-900/80 text-xs font-bold text-slate-400 flex justify-between">
+                            <span>Total Seluruh Aset:</span>
+                            <span className="text-slate-800 dark:text-slate-200 font-extrabold">{totalAssets} Unit</span>
+                        </div>
+                    </div>
+
+                    {/* Lab Metadata Card */}
+                    <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-950 flex flex-col justify-between">
                         <div>
                             <span className="text-[10px] font-bold uppercase tracking-widest text-blue-600 dark:text-blue-400">Informasi Ruangan</span>
                             <h3 className="text-2xl font-extrabold text-slate-900 dark:text-white mt-2">{laboratorium.nama_lab}</h3>
@@ -114,35 +227,6 @@ export default function Show({ laboratorium, asets, tickets, peminjamans }) {
                                     <span className="font-bold text-slate-800 dark:text-slate-250">{laboratorium.kapasitas_meja} Unit Meja Kerja</span>
                                 </div>
                             </div>
-                        </div>
-                    </div>
-
-                    {/* Stat: Total Assets by Category */}
-                    <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-950 flex flex-col justify-between">
-                        <div>
-                            <span className="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 block mb-3">Stok Aset Per Kategori</span>
-                            <div className="grid grid-cols-2 gap-3">
-                                <div className="bg-slate-50 dark:bg-slate-900/60 p-2.5 rounded-xl border border-slate-100 dark:border-slate-800/80">
-                                    <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 block uppercase">PC</span>
-                                    <span className="text-lg font-black text-blue-600 dark:text-blue-400">{countPC} <span className="text-[10px] font-semibold text-slate-400">unit</span></span>
-                                </div>
-                                <div className="bg-slate-50 dark:bg-slate-900/60 p-2.5 rounded-xl border border-slate-100 dark:border-slate-800/80">
-                                    <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 block uppercase">Monitor</span>
-                                    <span className="text-lg font-black text-indigo-600 dark:text-indigo-400">{countMonitor} <span className="text-[10px] font-semibold text-slate-400">unit</span></span>
-                                </div>
-                                <div className="bg-slate-50 dark:bg-slate-900/60 p-2.5 rounded-xl border border-slate-100 dark:border-slate-800/80">
-                                    <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 block uppercase">Keyboard</span>
-                                    <span className="text-lg font-black text-emerald-600 dark:text-emerald-400">{countKeyboard} <span className="text-[10px] font-semibold text-slate-400">unit</span></span>
-                                </div>
-                                <div className="bg-slate-50 dark:bg-slate-900/60 p-2.5 rounded-xl border border-slate-100 dark:border-slate-800/80">
-                                    <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 block uppercase">Mouse</span>
-                                    <span className="text-lg font-black text-amber-600 dark:text-amber-400">{countMouse} <span className="text-[10px] font-semibold text-slate-400">unit</span></span>
-                                </div>
-                            </div>
-                        </div>
-                        <div className="mt-3 pt-2.5 border-t border-slate-100 dark:border-slate-900/80 text-[10px] font-bold text-slate-400 flex justify-between">
-                            <span>Total Seluruh Aset:</span>
-                            <span className="text-slate-700 dark:text-slate-300 font-extrabold">{totalAssets} Unit</span>
                         </div>
                     </div>
 
