@@ -180,5 +180,57 @@ class SimlabApiController extends Controller
             'data' => $aset
         ], 201);
     }
+
+    public function updateAset(Request $request, $id)
+    {
+        $aset = Aset::find($id);
+
+        if (!$aset) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Aset tidak ditemukan.'
+            ], 404);
+        }
+
+        $validator = Validator::make($request->all(), [
+            'laboratorium_id' => 'sometimes|required|exists:laboratoriums,id',
+            'kode_aset' => 'sometimes|required|string|max:50|unique:asets,kode_aset,' . $aset->id,
+            'nama_aset' => 'sometimes|required|string|max:255',
+            'jenis_aset' => 'sometimes|required|in:statis,consumable,loanable',
+            'spesifikasi' => 'nullable|array',
+            'kondisi' => 'sometimes|required|in:baik,rusak_ringan,rusak_berat',
+            'stok' => 'sometimes|required|integer|min:0',
+            'posisi_meja' => 'nullable|integer|min:1'
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'errors' => $validator->errors()
+            ], 422);
+        }
+
+        $dataToUpdate = [];
+        $fields = ['laboratorium_id', 'kode_aset', 'nama_aset', 'jenis_aset', 'spesifikasi', 'kondisi', 'stok', 'posisi_meja'];
+        
+        foreach ($fields as $field) {
+            if ($request->has($field)) {
+                $dataToUpdate[$field] = $request->input($field);
+            }
+        }
+
+        if (isset($dataToUpdate['kode_aset'])) {
+            $dataToUpdate['kode_aset'] = strtoupper($dataToUpdate['kode_aset']);
+        }
+
+        $aset->update($dataToUpdate);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Aset updated successfully.',
+            'data' => $aset->fresh()
+        ]);
+    }
 }
+
 

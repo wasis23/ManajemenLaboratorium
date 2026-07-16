@@ -15,4 +15,6 @@ Route::middleware([CheckApiKey::class])->group(function () {
     Route::post('/tickets', [SimlabApiController::class, 'createTicket']);
     Route::post('/peminjamans', [SimlabApiController::class, 'createPeminjaman']);
     Route::post('/asets', [SimlabApiController::class, 'createAset']);
+    Route::put('/asets/{id}', [SimlabApiController::class, 'updateAset']);
 });
+

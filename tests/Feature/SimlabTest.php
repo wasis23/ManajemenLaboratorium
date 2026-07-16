@@ -259,4 +259,129 @@ class SimlabTest extends TestCase
         ]);
         $this->assertEquals('baik', $this->pcAset->fresh()->kondisi);
     }
+
+    /**
+     * Test API: access is blocked without correct key.
+     */
+    public function test_api_requires_valid_key()
+    {
+        config(['services.simlab.api_key' => 'my-secret-key']);
+
+        $response = $this->getJson('/api/asets');
+        $response->assertStatus(401);
+
+        $response = $this->getJson('/api/asets?api_key=wrong-key');
+        $response->assertStatus(401);
+    }
+
+    /**
+     * Test API: get assets works with valid key.
+     */
+    public function test_api_can_get_assets()
+    {
+        config(['services.simlab.api_key' => 'my-secret-key']);
+
+        $response = $this->withHeaders(['X-API-KEY' => 'my-secret-key'])
+            ->getJson('/api/asets');
+
+        $response->assertStatus(200);
+        $response->assertJsonStructure([
+            'success',
+            'data' => [
+                '*' => [
+                    'id',
+                    'laboratorium_id',
+                    'kode_aset',
+                    'nama_aset',
+                    'jenis_aset',
+                    'spesifikasi',
+                    'kondisi',
+                    'stok',
+                    'posisi_meja',
+                ]
+            ]
+        ]);
+    }
+
+    /**
+     * Test API: update asset successfully.
+     */
+    public function test_api_can_update_asset()
+    {
+        config(['services.simlab.api_key' => 'my-secret-key']);
+
+        $aset = $this->pcAset;
+
+        $response = $this->withHeaders(['X-API-KEY' => 'my-secret-key'])
+            ->putJson("/api/asets/{$aset->id}", [
+                'nama_aset' => 'Updated PC Name',
+                'kondisi' => 'rusak_ringan',
+                'stok' => 5,
+                'spesifikasi' => ['cpu' => 'Intel i7', 'ram' => '16GB']
+            ]);
+
+        $response->assertStatus(200);
+        $response->assertJson([
+            'success' => true,
+            'message' => 'Aset updated successfully.'
+        ]);
+
+        $this->assertDatabaseHas('asets', [
+            'id' => $aset->id,
+            'nama_aset' => 'Updated PC Name',
+            'kondisi' => 'rusak_ringan',
+            'stok' => 5
+        ]);
+
+        $this->assertEquals(['cpu' => 'Intel i7', 'ram' => '16GB'], $aset->fresh()->spesifikasi);
+    }
+
+    /**
+     * Test API: update asset validation errors.
+     */
+    public function test_api_update_asset_validation()
+    {
+        config(['services.simlab.api_key' => 'my-secret-key']);
+
+        $aset = $this->pcAset;
+
+        // Try invalid laboratorium_id and invalid kondisi
+        $response = $this->withHeaders(['X-API-KEY' => 'my-secret-key'])
+            ->putJson("/api/asets/{$aset->id}", [
+                'laboratorium_id' => 9999, // Doesn't exist
+                'kondisi' => 'invalid-kondisi',
+                'kode_aset' => $this->routerAset->kode_aset // Already exists
+            ]);
+
+        $response->assertStatus(422);
+        $response->assertJsonStructure([
+            'success',
+            'errors' => [
+                'laboratorium_id',
+                'kondisi',
+                'kode_aset'
+            ]
+        ]);
+    }
+
+    /**
+     * Test API: update asset not found.
+     */
+    public function test_api_update_asset_not_found()
+    {
+        config(['services.simlab.api_key' => 'my-secret-key']);
+
+        $response = $this->withHeaders(['X-API-KEY' => 'my-secret-key'])
+            ->putJson("/api/asets/99999", [
+                'nama_aset' => 'Non-existent Asset'
+            ]);
+
+        $response->assertStatus(404);
+        $response->assertJson([
+            'success' => false,
+            'message' => 'Aset tidak ditemukan.'
+        ]);
+    }
 }
+
+

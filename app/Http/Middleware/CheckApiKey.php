@@ -15,7 +15,7 @@ class CheckApiKey
      */
     public function handle(Request $request, Closure $next): Response
     {
-        $expectedKey = env('SIMLAB_API_KEY');
+        $expectedKey = config('services.simlab.api_key');
 
         if (!$expectedKey) {
             return response()->json([

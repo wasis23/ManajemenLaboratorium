@@ -35,4 +35,9 @@ return [
         ],
     ],
 
+    'simlab' => [
+        'api_key' => env('SIMLAB_API_KEY'),
+    ],
+
 ];
+
