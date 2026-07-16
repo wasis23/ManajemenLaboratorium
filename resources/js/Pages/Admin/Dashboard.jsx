@@ -202,17 +202,26 @@ export default function AdminDashboard({ assetStats, ticketStats, labs, pendingL
                                     <div key={loan.id} className="rounded-xl border border-slate-100 p-4 dark:border-slate-900 bg-slate-50/50 dark:bg-slate-900/10 text-xs">
                                         <div className="flex items-center justify-between">
                                             <span className="font-mono font-bold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/30 px-2 py-0.5 rounded">
-                                                {loan.aset ? loan.aset.kode_aset : `Kategori: ${loan.kategori_aset}`}
+                                                {loan.kode_peminjaman ? loan.kode_peminjaman : 'Peminjaman'}
                                             </span>
                                             <span className="text-[10px] text-slate-500">
                                                 Oleh: <span className="font-bold">{loan.user ? loan.user.name : `${loan.nama_peminjam} (Tamu)`}</span>
                                             </span>
                                         </div>
 
-                                        <h4 className="mt-2 font-bold text-slate-850 dark:text-slate-200">
-                                            {loan.aset ? loan.aset.nama_aset : `Peminjaman Kategori ${loan.kategori_aset}`}
-                                        </h4>
-                                        <p className="text-slate-500 mt-0.5">Jumlah: <span className="font-bold text-slate-800 dark:text-slate-200">{loan.jumlah} Pcs</span> | Keperluan: "{loan.catatan || '-'}"</p>
+                                        <div className="mt-2 text-slate-800 dark:text-slate-200">
+                                            <span className="font-semibold block text-[11px] mb-1">Perangkat Yang Diajukan:</span>
+                                            <ul className="list-disc pl-4 space-y-0.5 font-bold text-slate-900 dark:text-slate-100">
+                                                {loan.items ? loan.items.map(item => (
+                                                    <li key={item.id}>
+                                                        {item.kategori_aset} ({item.jumlah} Pcs)
+                                                    </li>
+                                                )) : (
+                                                    <li>{loan.kategori_aset} ({loan.jumlah} Pcs)</li>
+                                                )}
+                                            </ul>
+                                        </div>
+                                        <p className="text-slate-500 mt-2">Keperluan: "{loan.catatan || '-'}"</p>
 
                                         <div className="mt-4 pt-3 border-t border-slate-100 dark:border-slate-900 flex justify-end gap-2">
                                             <button

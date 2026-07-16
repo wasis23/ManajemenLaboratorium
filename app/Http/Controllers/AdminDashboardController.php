@@ -43,11 +43,50 @@ class AdminDashboardController extends Controller
             ];
         });
 
-        // 4. Pending loan approvals
-        $pendingLoans = Peminjaman::with(['user', 'aset.laboratorium'])
+        // 4. Pending loan approvals grouped by transaction
+        $rawPendingLoans = Peminjaman::with(['user', 'aset.laboratorium'])
             ->where('status_peminjaman', 'menunggu_persetujuan')
             ->orderBy('created_at', 'asc')
             ->get();
+
+        $groupedPending = [];
+        foreach ($rawPendingLoans as $loan) {
+            $key = $loan->kode_peminjaman ?: 'SINGLE-' . $loan->id;
+            if (!isset($groupedPending[$key])) {
+                $groupedPending[$key] = collect();
+            }
+            $groupedPending[$key]->push($loan);
+        }
+
+        $pendingLoans = collect();
+        foreach ($groupedPending as $kode => $items) {
+            $first = $items->first();
+            $pendingLoans->push([
+                'id' => $first->id,
+                'kode_peminjaman' => $first->kode_peminjaman,
+                'user' => $first->user,
+                'nama_peminjam' => $first->nama_peminjam,
+                'nomor_induk' => $first->nomor_induk,
+                'prodi_unit' => $first->prodi_unit,
+                'kontak_peminjam' => $first->kontak_peminjam,
+                'email_peminjam' => $first->email_peminjam,
+                'tanggal_pinjam' => $first->tanggal_pinjam ? $first->tanggal_pinjam->format('Y-m-d') : null,
+                'tanggal_kembali_rencana' => $first->tanggal_kembali_rencana ? $first->tanggal_kembali_rencana->format('Y-m-d') : null,
+                'status_peminjaman' => $first->status_peminjaman,
+                'catatan' => $first->catatan,
+                'items' => $items->map(function ($item) {
+                    return [
+                        'id' => $item->id,
+                        'kategori_aset' => $item->kategori_aset,
+                        'jumlah' => $item->jumlah,
+                        'aset' => $item->aset,
+                    ];
+                }),
+                'aset' => $first->aset,
+                'kategori_aset' => $first->kategori_aset,
+                'jumlah' => $first->jumlah,
+            ]);
+        }
 
         // 5. Active/unresolved tickets
         $activeTickets = Ticket::with(['aset.laboratorium', 'user'])

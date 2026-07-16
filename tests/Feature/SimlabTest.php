@@ -266,6 +266,99 @@ class SimlabTest extends TestCase
     }
 
     /**
+     * Test admin can approve grouped loan request in bulk.
+     */
+    public function test_admin_can_approve_grouped_loan_requests()
+    {
+        $kode = 'LP-TESTGRP';
+
+        $loan1 = Peminjaman::create([
+            'kode_peminjaman' => $kode,
+            'user_id' => $this->student->id,
+            'aset_id' => null,
+            'kategori_aset' => $this->pcAset->jenis_aset,
+            'jumlah' => 1,
+            'tanggal_pinjam' => now()->format('Y-m-d'),
+            'tanggal_kembali_rencana' => now()->addDays(3)->format('Y-m-d'),
+            'status_peminjaman' => 'menunggu_persetujuan',
+        ]);
+
+        $loan2 = Peminjaman::create([
+            'kode_peminjaman' => $kode,
+            'user_id' => $this->student->id,
+            'aset_id' => null,
+            'kategori_aset' => $this->routerAset->jenis_aset,
+            'jumlah' => 1,
+            'tanggal_pinjam' => now()->format('Y-m-d'),
+            'tanggal_kembali_rencana' => now()->addDays(3)->format('Y-m-d'),
+            'status_peminjaman' => 'menunggu_persetujuan',
+        ]);
+
+        $response = $this->actingAs($this->admin)->patch("/admin/peminjaman/{$loan1->id}/approve", [
+            'action' => 'approve',
+            'allocations' => [
+                ['id' => $loan1->id, 'aset_id' => $this->pcAset->id],
+                ['id' => $loan2->id, 'aset_id' => $this->routerAset->id],
+            ]
+        ]);
+
+        $response->assertRedirect();
+        $this->assertDatabaseHas('peminjamans', [
+            'id' => $loan1->id,
+            'aset_id' => $this->pcAset->id,
+            'status_peminjaman' => 'dipinjam',
+        ]);
+        $this->assertDatabaseHas('peminjamans', [
+            'id' => $loan2->id,
+            'aset_id' => $this->routerAset->id,
+            'status_peminjaman' => 'dipinjam',
+        ]);
+    }
+
+    /**
+     * Test admin can return grouped loan requests in bulk.
+     */
+    public function test_admin_can_return_grouped_loan_requests()
+    {
+        $kode = 'LP-TESTGRP2';
+
+        $loan1 = Peminjaman::create([
+            'kode_peminjaman' => $kode,
+            'user_id' => $this->student->id,
+            'aset_id' => $this->pcAset->id,
+            'jumlah' => 1,
+            'tanggal_pinjam' => now()->format('Y-m-d'),
+            'tanggal_kembali_rencana' => now()->addDays(3)->format('Y-m-d'),
+            'status_peminjaman' => 'dipinjam',
+        ]);
+
+        $loan2 = Peminjaman::create([
+            'kode_peminjaman' => $kode,
+            'user_id' => $this->student->id,
+            'aset_id' => $this->routerAset->id,
+            'jumlah' => 1,
+            'tanggal_pinjam' => now()->format('Y-m-d'),
+            'tanggal_kembali_rencana' => now()->addDays(3)->format('Y-m-d'),
+            'status_peminjaman' => 'dipinjam',
+        ]);
+
+        $response = $this->actingAs($this->admin)->patch("/admin/peminjaman/{$loan1->id}/approve", [
+            'action' => 'return',
+        ]);
+
+        $response->assertRedirect();
+        $this->assertDatabaseHas('peminjamans', [
+            'id' => $loan1->id,
+            'status_peminjaman' => 'dikembalikan',
+        ]);
+        $this->assertDatabaseHas('peminjamans', [
+            'id' => $loan2->id,
+            'status_peminjaman' => 'dikembalikan',
+        ]);
+    }
+
+
+    /**
      * Test admin resolve ticket and auto-update asset condition.
      */
     public function test_admin_resolving_ticket_updates_asset_condition()

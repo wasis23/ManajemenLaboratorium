@@ -104,9 +104,12 @@ class ClientLoanController extends Controller
             }
         }
 
+        $kodePeminjaman = 'LP-' . strtoupper(\Illuminate\Support\Str::random(8));
+
         // Create a Peminjaman record for each item
         foreach ($request->items as $item) {
             Peminjaman::create([
+                'kode_peminjaman' => $kodePeminjaman,
                 'user_id' => auth()->id(),
                 'nama_peminjam' => $request->nama_peminjam,
                 'nomor_induk' => $request->nomor_induk,

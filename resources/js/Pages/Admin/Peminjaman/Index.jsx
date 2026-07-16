@@ -3,8 +3,8 @@ import { Head, Link, router } from '@inertiajs/react';
 import { useState } from 'react';
 
 export default function Index({ loans, assets = [], filters }) {
-    const [approvingLoan, setApprovingLoan] = useState(null);
-    const [selectedAssetId, setSelectedAssetId] = useState('');
+    const [approvingGroup, setApprovingGroup] = useState(null);
+    const [groupAllocations, setGroupAllocations] = useState({});
 
     const handleLoanAction = (id, action) => {
         if (confirm(`Apakah Anda yakin ingin melakukan tindakan "${action}" untuk transaksi peminjaman ini?`)) {
@@ -12,16 +12,32 @@ export default function Index({ loans, assets = [], filters }) {
         }
     };
 
-    const handleConfirmApprove = (id) => {
-        router.patch(route('admin.peminjaman.approve', { peminjaman: id }), {
+    const handleConfirmApproveGroup = (loanId) => {
+        const loanObj = loans.data.find(l => l.id === loanId);
+        const allocations = loanObj.items.map(item => ({
+            id: item.id,
+            aset_id: groupAllocations[item.id]
+        }));
+
+        router.patch(route('admin.peminjaman.approve', { peminjaman: loanId }), {
             action: 'approve',
-            aset_id: selectedAssetId
+            allocations: allocations
         }, {
             onSuccess: () => {
-                setApprovingLoan(null);
-                setSelectedAssetId('');
+                setApprovingGroup(null);
+                setGroupAllocations({});
             }
         });
+    };
+
+    const handleStartApprove = (loan) => {
+        setApprovingGroup(loan.id);
+        const initialAllocations = {};
+        loan.items.forEach(item => {
+            const matching = assets.filter(a => a.jenis_aset === item.kategori_aset);
+            initialAllocations[item.id] = matching.length > 0 ? matching[0].id : '';
+        });
+        setGroupAllocations(initialAllocations);
     };
 
     return (
@@ -92,7 +108,7 @@ export default function Index({ loans, assets = [], filters }) {
                                     </tr>
                                 ) : (
                                     loans.data.map((loan) => (
-                                        <tr key={loan.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-900/10">
+                                        <tr key={loan.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-900/10 align-top">
                                             <td className="px-6 py-4">
                                                 {loan.user ? (
                                                     <>
@@ -103,27 +119,56 @@ export default function Index({ loans, assets = [], filters }) {
                                                 ) : (
                                                     <>
                                                         <span className="font-bold text-slate-850 dark:text-slate-200 block">{loan.nama_peminjam}</span>
-                                                        <span className="text-[10px] text-slate-400 block mt-0.5">{loan.kontak_peminjam}</span>
+                                                        <span className="text-[10px] text-slate-450 block mt-0.5">📞 WhatsApp: {loan.kontak_peminjam}</span>
+                                                        <span className="text-[10px] text-slate-400 block mt-0.5">📧 Email: {loan.email_peminjam}</span>
                                                         <span className="text-[10px] text-amber-500 uppercase tracking-widest font-semibold block mt-0.5">Tamu / Tanpa Akun</span>
                                                     </>
                                                 )}
-                                            </td>
-                                            <td className="px-6 py-4">
-                                                {loan.aset ? (
-                                                    <>
-                                                        <span className="font-mono font-bold text-blue-600 dark:text-blue-400 block">{loan.aset.kode_aset}</span>
-                                                        <span className="text-slate-800 dark:text-slate-200 mt-0.5 block font-bold">{loan.aset.nama_aset}</span>
-                                                        <span className="text-[10px] text-slate-500 block">📍 Ruang: {loan.aset.laboratorium.nama_lab}</span>
-                                                    </>
-                                                ) : (
-                                                    <>
-                                                        <span className="font-bold text-indigo-600 dark:text-indigo-400 block uppercase tracking-wider text-[11px]">Kategori: {loan.kategori_aset}</span>
-                                                        <span className="text-[10px] text-amber-500 font-semibold block mt-0.5">Belum ditentukan asetnya</span>
-                                                    </>
+                                                {loan.kode_peminjaman && (
+                                                    <span className="mt-1 inline-block font-mono text-[9px] bg-slate-100 dark:bg-slate-900 text-slate-600 dark:text-slate-400 px-1.5 py-0.5 rounded font-bold">
+                                                        Code: {loan.kode_peminjaman}
+                                                    </span>
                                                 )}
                                             </td>
-                                            <td className="px-6 py-4 text-center font-bold text-slate-800 dark:text-slate-200">
-                                                {loan.jumlah} Pcs
+                                            <td className="px-6 py-4">
+                                                {loan.items ? loan.items.map((item, idx) => (
+                                                    <div key={item.id} className={idx > 0 ? "mt-3 pt-3 border-t border-slate-100 dark:border-slate-900" : ""}>
+                                                        {item.aset ? (
+                                                            <>
+                                                                <span className="font-mono font-bold text-blue-600 dark:text-blue-400 block">{item.aset.kode_aset}</span>
+                                                                <span className="text-slate-800 dark:text-slate-200 mt-0.5 block font-bold">{item.aset.nama_aset}</span>
+                                                                <span className="text-[10px] text-slate-500 block">📍 Ruang: {item.aset.laboratorium.nama_lab}</span>
+                                                            </>
+                                                        ) : (
+                                                            <>
+                                                                <span className="font-bold text-indigo-600 dark:text-indigo-400 block uppercase tracking-wider text-[11px]">Kategori: {item.kategori_aset}</span>
+                                                                <span className="text-[10px] text-amber-500 font-semibold block mt-0.5">Belum ditentukan unit fisiknya</span>
+                                                            </>
+                                                        )}
+                                                    </div>
+                                                )) : (
+                                                    loan.aset ? (
+                                                        <>
+                                                            <span className="font-mono font-bold text-blue-600 dark:text-blue-400 block">{loan.aset.kode_aset}</span>
+                                                            <span className="text-slate-800 dark:text-slate-200 mt-0.5 block font-bold">{loan.aset.nama_aset}</span>
+                                                            <span className="text-[10px] text-slate-500 block">📍 Ruang: {loan.aset.laboratorium.nama_lab}</span>
+                                                        </>
+                                                    ) : (
+                                                        <>
+                                                            <span className="font-bold text-indigo-600 dark:text-indigo-400 block uppercase tracking-wider text-[11px]">Kategori: {loan.kategori_aset}</span>
+                                                            <span className="text-[10px] text-amber-500 font-semibold block mt-0.5">Belum ditentukan unit fisiknya</span>
+                                                        </>
+                                                    )
+                                                )}
+                                            </td>
+                                            <td className="px-6 py-4 text-center">
+                                                {loan.items ? loan.items.map((item, idx) => (
+                                                    <div key={item.id} className={`font-bold text-slate-800 dark:text-slate-200 ${idx > 0 ? "mt-3 pt-3 border-t border-slate-100 dark:border-slate-900" : ""}`}>
+                                                        {item.jumlah} Pcs
+                                                    </div>
+                                                )) : (
+                                                    <span className="font-bold text-slate-800 dark:text-slate-200">{loan.jumlah} Pcs</span>
+                                                )}
                                             </td>
                                             <td className="px-6 py-4 text-slate-655 dark:text-slate-400">
                                                 {new Date(loan.tanggal_pinjam).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}
@@ -153,37 +198,77 @@ export default function Index({ loans, assets = [], filters }) {
                                             <td className="px-6 py-4 text-right space-x-2 whitespace-nowrap">
                                                 {loan.status_peminjaman === 'menunggu_persetujuan' && (
                                                     <>
-                                                        {approvingLoan === loan.id ? (
-                                                            <div className="inline-flex items-center gap-1 bg-white dark:bg-slate-900 p-1.5 rounded-lg border border-slate-200 dark:border-slate-800 shadow-sm">
-                                                                <select
-                                                                    value={selectedAssetId}
-                                                                    onChange={(e) => setSelectedAssetId(e.target.value)}
-                                                                    className="rounded border border-slate-300 dark:border-slate-850 dark:bg-slate-950 text-[11px] px-2 py-0.5 focus:ring-1 focus:ring-blue-500 text-slate-800 dark:text-slate-100"
-                                                                    required
-                                                                >
-                                                                    <option value="">-- Pilih Aset Fisik --</option>
-                                                                    {assets
-                                                                        .filter(a => a.jenis_aset === loan.kategori_aset)
-                                                                        .map(a => (
-                                                                            <option key={a.id} value={a.id}>
-                                                                                {a.nama_aset} ({a.kode_aset}) - Stok: {a.stok}
-                                                                            </option>
-                                                                        ))
-                                                                    }
-                                                                </select>
-                                                                <button
-                                                                    onClick={() => handleConfirmApprove(loan.id)}
-                                                                    disabled={!selectedAssetId}
-                                                                    className="bg-emerald-600 hover:bg-emerald-700 disabled:bg-slate-300 disabled:cursor-not-allowed text-white rounded px-2 py-0.5 text-[11px] font-semibold transition"
-                                                                >
-                                                                    Setuju
-                                                                </button>
-                                                                <button
-                                                                    onClick={() => setApprovingLoan(null)}
-                                                                    className="text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 text-[11px] font-semibold px-1"
-                                                                >
-                                                                    Batal
-                                                                </button>
+                                                        {approvingGroup === loan.id ? (
+                                                            <div className="inline-flex flex-col gap-2 bg-white dark:bg-slate-900 p-3 rounded-lg border border-slate-200 dark:border-slate-800 shadow-sm max-w-xs text-left">
+                                                                <span className="font-bold text-slate-700 dark:text-slate-200 block text-[10px] uppercase tracking-wider">
+                                                                    Alokasikan Aset:
+                                                                </span>
+                                                                {loan.items ? loan.items.map((item) => (
+                                                                    <div key={item.id} className="flex flex-col gap-0.5 border-b border-slate-100 dark:border-slate-850 pb-1.5 mb-1.5 last:border-0 last:pb-0 last:mb-0">
+                                                                        <span className="text-[10px] text-indigo-600 dark:text-indigo-400 font-semibold">
+                                                                            {item.kategori_aset} ({item.jumlah} Pcs)
+                                                                        </span>
+                                                                        <select
+                                                                            value={groupAllocations[item.id] || ''}
+                                                                            onChange={(e) => setGroupAllocations({
+                                                                                ...groupAllocations,
+                                                                                [item.id]: e.target.value
+                                                                            })}
+                                                                            className="rounded border border-slate-300 dark:border-slate-800 dark:bg-slate-950 text-[10px] px-1.5 py-0.5 focus:ring-1 focus:ring-blue-500 text-slate-800 dark:text-slate-100 w-full"
+                                                                            required
+                                                                        >
+                                                                            <option value="">-- Pilih Unit --</option>
+                                                                            {assets
+                                                                                .filter(a => a.jenis_aset === item.kategori_aset)
+                                                                                .map(a => (
+                                                                                    <option key={a.id} value={a.id}>
+                                                                                        {a.nama_aset} ({a.kode_aset}) - Stok: {a.stok}
+                                                                                    </option>
+                                                                                ))
+                                                                            }
+                                                                        </select>
+                                                                    </div>
+                                                                )) : (
+                                                                    <div className="flex flex-col gap-0.5">
+                                                                        <span className="text-[10px] text-indigo-600 dark:text-indigo-400 font-semibold">
+                                                                            {loan.kategori_aset} ({loan.jumlah} Pcs)
+                                                                        </span>
+                                                                        <select
+                                                                            value={groupAllocations[loan.id] || ''}
+                                                                            onChange={(e) => setGroupAllocations({
+                                                                                ...groupAllocations,
+                                                                                [loan.id]: e.target.value
+                                                                            })}
+                                                                            className="rounded border border-slate-300 dark:border-slate-800 dark:bg-slate-950 text-[10px] px-1.5 py-0.5 focus:ring-1 focus:ring-blue-500 text-slate-800 dark:text-slate-100 w-full"
+                                                                            required
+                                                                        >
+                                                                            <option value="">-- Pilih Unit --</option>
+                                                                            {assets
+                                                                                .filter(a => a.jenis_aset === loan.kategori_aset)
+                                                                                .map(a => (
+                                                                                    <option key={a.id} value={a.id}>
+                                                                                        {a.nama_aset} ({a.kode_aset}) - Stok: {a.stok}
+                                                                                    </option>
+                                                                                ))
+                                                                            }
+                                                                        </select>
+                                                                    </div>
+                                                                )}
+                                                                <div className="flex justify-end gap-1 mt-2">
+                                                                    <button
+                                                                        onClick={() => setApprovingGroup(null)}
+                                                                        className="text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 text-[10px] font-semibold px-2 py-0.5 border border-slate-200 dark:border-slate-800 rounded"
+                                                                    >
+                                                                        Batal
+                                                                    </button>
+                                                                    <button
+                                                                        onClick={() => handleConfirmApproveGroup(loan.id)}
+                                                                        disabled={loan.items ? !loan.items.every(item => groupAllocations[item.id]) : !groupAllocations[loan.id]}
+                                                                        className="bg-emerald-600 hover:bg-emerald-700 disabled:bg-slate-200 disabled:text-slate-400 dark:disabled:bg-slate-800 dark:disabled:text-slate-600 disabled:cursor-not-allowed text-white rounded px-2 py-0.5 text-[10px] font-semibold transition"
+                                                                    >
+                                                                        Setuju
+                                                                    </button>
+                                                                </div>
                                                             </div>
                                                         ) : (
                                                             <>
@@ -194,15 +279,7 @@ export default function Index({ loans, assets = [], filters }) {
                                                                     Tolak
                                                                 </button>
                                                                 <button
-                                                                    onClick={() => {
-                                                                        setApprovingLoan(loan.id);
-                                                                        const matching = assets.filter(a => a.jenis_aset === loan.kategori_aset);
-                                                                        if (matching.length > 0) {
-                                                                            setSelectedAssetId(matching[0].id);
-                                                                        } else {
-                                                                            setSelectedAssetId('');
-                                                                        }
-                                                                    }}
+                                                                    onClick={() => handleStartApprove(loan)}
                                                                     className="text-xs font-semibold text-emerald-600 hover:text-emerald-800 dark:text-emerald-450"
                                                                 >
                                                                     Approve
