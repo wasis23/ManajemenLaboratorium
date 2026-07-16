@@ -124,6 +124,80 @@ export default function Index({ asets, laboratoriums, filters }) {
         setCurrentAset(null);
     };
 
+    const downloadQrBarcode = () => {
+        if (!currentAset) return;
+
+        const canvas = document.createElement('canvas');
+        canvas.width = 400;
+        canvas.height = 500;
+        const ctx = canvas.getContext('2d');
+
+        // Background
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        // Border
+        ctx.strokeStyle = '#0f172a';
+        ctx.lineWidth = 10;
+        ctx.strokeRect(5, 5, canvas.width - 10, canvas.height - 10);
+
+        // Header (SIMLAB INDONUSA enlarged)
+        ctx.fillStyle = '#0f172a';
+        ctx.font = '900 24px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText('SIMLAB INDONUSA', canvas.width / 2, 60);
+
+        // QR Code Image
+        const img = new Image();
+        img.crossOrigin = 'anonymous';
+        img.src = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(window.location.origin + '/scan/' + currentAset.kode_aset)}`;
+        img.onload = () => {
+            // Draw QR Code
+            ctx.drawImage(img, (canvas.width - 200) / 2, 90, 200, 200);
+
+            // Draw asset code background
+            const rx = (canvas.width - 220) / 2;
+            const ry = 310;
+            const rw = 220;
+            const rh = 45;
+            
+            ctx.fillStyle = '#f8fafc';
+            ctx.strokeStyle = '#cbd5e1';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            if (ctx.roundRect) {
+                ctx.roundRect(rx, ry, rw, rh, 8);
+            } else {
+                ctx.rect(rx, ry, rw, rh);
+            }
+            ctx.fill();
+            ctx.stroke();
+
+            // Draw asset code text
+            ctx.fillStyle = '#1d4ed8'; // blue-700
+            ctx.font = 'bold 22px monospace';
+            ctx.fillText(currentAset.kode_aset, canvas.width / 2, ry + 30);
+
+            // Draw location
+            ctx.fillStyle = '#475569'; // slate-600
+            ctx.font = 'bold 13px sans-serif';
+            const labName = currentAset.laboratorium ? currentAset.laboratorium.nama_lab : 'LABORATORIUM';
+            ctx.fillText(`📍 ${labName.toUpperCase()}`, canvas.width / 2, ry + 80);
+
+            // Draw Scan instructions
+            ctx.fillStyle = '#64748b'; // slate-500
+            ctx.font = 'bold 10px sans-serif';
+            ctx.fillText('SCAN QR UNTUK MELAPOR KERUSAKAN', canvas.width / 2, ry + 115);
+            ctx.fillText('ATAU MELAKUKAN PEMINJAMAN', canvas.width / 2, ry + 130);
+
+            // Download
+            const link = document.createElement('a');
+            link.download = `QR-${currentAset.kode_aset}.png`;
+            link.href = canvas.toDataURL('image/png');
+            link.click();
+        };
+    };
+
     return (
         <AuthenticatedLayout
             header={
@@ -766,8 +840,7 @@ export default function Index({ asets, laboratoriums, filters }) {
 
                     {/* QR Code Printable Label Card */}
                     <div id="printable-qr-label" className="border-4 border-slate-900 bg-white p-6 rounded-2xl flex flex-col items-center max-w-xs text-slate-900 shadow-xl">
-                        <span className="font-extrabold text-xs uppercase tracking-widest text-slate-500">SIMLAB INDONUSA</span>
-                        <h4 className="font-black text-sm tracking-tight text-center mt-1 max-w-[200px] truncate">{currentAset?.nama_aset}</h4>
+                        <span className="font-extrabold text-base uppercase tracking-widest text-slate-900">SIMLAB INDONUSA</span>
 
                         {/* Real QR API image based on app scan URL */}
                         <div className="mt-4 p-2 bg-slate-50 rounded-xl border border-slate-100 flex items-center justify-center">
@@ -784,10 +857,10 @@ export default function Index({ asets, laboratoriums, filters }) {
                             {currentAset?.kode_aset}
                         </span>
                         
-                        <p className="mt-3 text-[10px] font-bold text-slate-400 text-center uppercase tracking-wide leading-relaxed">
+                        <p className="mt-3 text-[9px] font-bold text-slate-500 text-center uppercase tracking-wide leading-relaxed">
                             📍 {currentAset?.laboratorium?.nama_lab}
                             <br />
-                            Scan QR untuk Melapor Kerusakan
+                            Scan QR untuk Melapor Kerusakan atau Melakukan Peminjaman
                         </p>
                     </div>
 
@@ -801,10 +874,10 @@ export default function Index({ asets, laboratoriums, filters }) {
                         </button>
                         <button
                             type="button"
-                            onClick={() => window.print()}
+                            onClick={downloadQrBarcode}
                             className="flex-1 rounded-lg bg-blue-600 hover:bg-blue-700 py-2 text-sm font-semibold text-white transition shadow-md shadow-blue-500/10"
                         >
-                            Cetak Label
+                            Download Barcode
                         </button>
                     </div>
                 </div>
