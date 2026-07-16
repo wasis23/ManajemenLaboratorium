@@ -37,6 +37,8 @@ class AdminDashboardController extends Controller
                 'kapasitas_meja' => $lab->kapasitas_meja,
                 'asets_count' => $lab->asets_count,
                 'baik_count' => Aset::where('laboratorium_id', $lab->id)->where('kondisi', 'baik')->count(),
+                'rusak_ringan_count' => Aset::where('laboratorium_id', $lab->id)->where('kondisi', 'rusak_ringan')->count(),
+                'rusak_berat_count' => Aset::where('laboratorium_id', $lab->id)->where('kondisi', 'rusak_berat')->count(),
                 'rusak_count' => Aset::where('laboratorium_id', $lab->id)->whereIn('kondisi', ['rusak_ringan', 'rusak_berat'])->count(),
             ];
         });
