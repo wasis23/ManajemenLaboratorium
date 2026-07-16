@@ -211,7 +211,21 @@ export default function Welcome({ auth, laboratoriums, asets, filters, borrowabl
                     <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 mt-6">
                         <div className="rounded-xl bg-emerald-50 dark:bg-emerald-950/30 p-4 border border-emerald-200 dark:border-emerald-800 text-sm text-emerald-800 dark:text-emerald-400 font-semibold flex items-center gap-2">
                             <span className="text-lg">✅</span>
-                            {flash.success}
+                            {flash.success.includes('Mas Wasis') ? (
+                                <span>
+                                    Pengajuan peminjaman berhasil dibuat! Silakan hubungi admin laboratorium untuk persetujuan:{' '}
+                                    <a
+                                        href="https://wa.me/62859106886664?text=Halo%20Mas%20Wasis%2C%20saya%20baru%20saja%20membuat%20pengajuan%20peminjaman%20perangkat%20praktik%20di%20SIMLAB.%20Mohon%20untuk%20diperiksa%20dan%20disetujui.%20Terima%20kasih!"
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 underline font-bold"
+                                    >
+                                        Mas Wasis (+62859106886664)
+                                    </a>
+                                </span>
+                            ) : (
+                                flash.success
+                            )}
                         </div>
                     </div>
                 )}
@@ -236,7 +250,7 @@ export default function Welcome({ auth, laboratoriums, asets, filters, borrowabl
                             <div>
                                 <h3 className="text-lg font-bold">Peminjaman Perangkat Bebas Akses (Tanpa Akun)</h3>
                                 <p className="text-xs text-blue-100 mt-0.5 max-w-2xl leading-relaxed">
-                                    Butuh monitor, keyboard, atau mouse tambahan untuk praktikum? Sekarang Anda dapat mengajukan peminjaman secara langsung secara online tanpa perlu login. Cukup isi detail data diri Anda dan ambil barangnya di lab!
+                                    Butuh PC, Monitor, Keyboard, atau Mouse tambahan untuk praktikum atau acara ? Sekarang Anda dapat mengajukan peminjaman secara langsung secara online tanpa perlu login. Cukup isi detail data diri Anda di form ini !
                                 </p>
                             </div>
                         </div>

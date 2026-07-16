@@ -131,7 +131,7 @@ class ClientLoanController extends Controller
         if (auth()->check()) {
             return redirect()->route('peminjaman.saya')->with('success', 'Pengajuan peminjaman berhasil dibuat. Silakan tunggu persetujuan admin.');
         } else {
-            return redirect()->route('public.catalog')->with('success', 'Pengajuan peminjaman berhasil dibuat! Silakan hubungi admin laboratorium untuk persetujuan.');
+            return redirect()->route('public.catalog')->with('success', 'Pengajuan peminjaman berhasil dibuat! Silakan hubungi admin laboratorium untuk persetujuan. Mas Wasis (+62859106886664)');
         }
     }
 
