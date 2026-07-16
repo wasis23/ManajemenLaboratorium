@@ -77,7 +77,7 @@ class ClientLoanController extends Controller
             
             // Items validation
             'items' => 'required|array|min:1',
-            'items.*.aset_id' => 'required|exists:asets,id',
+            'items.*.kategori_aset' => 'required|string|in:PC,Monitor,Keyboard,Mouse',
             'items.*.jumlah' => 'required|integer|min:1',
             
             // Time & purpose
@@ -95,14 +95,12 @@ class ClientLoanController extends Controller
 
         // Verify each item's stock and loanability
         foreach ($request->items as $item) {
-            $aset = Aset::findOrFail($item['aset_id']);
-            
-            if (!in_array($aset->jenis_aset, ['Monitor', 'Keyboard', 'Mouse'])) {
-                return redirect()->back()->with('error', "Aset {$aset->nama_aset} tidak dapat dipinjam.");
-            }
+            $totalStock = Aset::where('jenis_aset', $item['kategori_aset'])
+                ->where('kondisi', 'baik')
+                ->sum('stok');
 
-            if ($item['jumlah'] > $aset->stok) {
-                return redirect()->back()->with('error', "Stok untuk {$aset->nama_aset} tidak mencukupi. Tersisa: {$aset->stok} unit.");
+            if ($item['jumlah'] > $totalStock) {
+                return redirect()->back()->with('error', "Stok untuk kategori {$item['kategori_aset']} tidak mencukupi. Tersisa: {$totalStock} unit.");
             }
         }
 
@@ -115,7 +113,8 @@ class ClientLoanController extends Controller
                 'prodi_unit' => $request->prodi_unit,
                 'kontak_peminjam' => $request->kontak_peminjam,
                 'email_peminjam' => $request->email_peminjam,
-                'aset_id' => $item['aset_id'],
+                'aset_id' => null, // Left null until admin assigns specific asset on approval
+                'kategori_aset' => $item['kategori_aset'],
                 'jumlah' => $item['jumlah'],
                 'tanggal_pinjam' => $request->tanggal_pinjam,
                 'jam_pinjam' => $request->jam_pinjam,

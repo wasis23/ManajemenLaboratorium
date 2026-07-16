@@ -19,6 +19,7 @@ class Peminjaman extends Model
         'prodi_unit',
         'email_peminjam',
         'aset_id',
+        'kategori_aset',
         'jumlah',
         'tanggal_pinjam',
         'jam_pinjam',

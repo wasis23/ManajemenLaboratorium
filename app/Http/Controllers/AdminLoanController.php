@@ -23,8 +23,14 @@ class AdminLoanController extends Controller
 
         $loans = $query->orderBy('created_at', 'desc')->paginate(15)->withQueryString();
 
+        $assets = Aset::with('laboratorium')
+            ->where('kondisi', 'baik')
+            ->where('stok', '>', 0)
+            ->get();
+
         return Inertia::render('Admin/Peminjaman/Index', [
             'loans' => $loans,
+            'assets' => $assets,
             'filters' => $request->only(['status']),
         ]);
     }
@@ -36,11 +42,20 @@ class AdminLoanController extends Controller
     {
         $loan = Peminjaman::findOrFail($id);
         $action = $request->input('action'); // 'approve', 'reject', 'return'
-        $aset = Aset::findOrFail($loan->aset_id);
 
         if ($action === 'approve') {
             if ($loan->status_peminjaman !== 'menunggu_persetujuan') {
                 return redirect()->back()->with('error', 'Transaksi tidak sedang menunggu persetujuan.');
+            }
+
+            $request->validate([
+                'aset_id' => 'required|exists:asets,id',
+            ]);
+
+            $aset = Aset::findOrFail($request->aset_id);
+
+            if ($aset->jenis_aset !== $loan->kategori_aset) {
+                return redirect()->back()->with('error', "Aset yang dipilih harus berkategori {$loan->kategori_aset}.");
             }
 
             if ($aset->stok < $loan->jumlah) {
@@ -51,10 +66,11 @@ class AdminLoanController extends Controller
             $aset->decrement('stok', $loan->jumlah);
 
             $loan->update([
+                'aset_id' => $aset->id,
                 'status_peminjaman' => 'dipinjam',
             ]);
 
-            return redirect()->back()->with('success', 'Peminjaman telah disetujui dan stok telah dikurangi.');
+            return redirect()->back()->with('success', 'Peminjaman telah disetujui dengan aset terpilih.');
 
         } elseif ($action === 'reject') {
             if ($loan->status_peminjaman !== 'menunggu_persetujuan') {
@@ -71,6 +87,8 @@ class AdminLoanController extends Controller
             if ($loan->status_peminjaman !== 'dipinjam') {
                 return redirect()->back()->with('error', 'Transaksi tidak sedang aktif dipinjam.');
             }
+
+            $aset = Aset::findOrFail($loan->aset_id);
 
             // Increment the physical stock back in the database
             $aset->increment('stok', $loan->jumlah);

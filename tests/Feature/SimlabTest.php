@@ -125,7 +125,7 @@ class SimlabTest extends TestCase
             'kontak_peminjam' => '081234567890',
             'email_peminjam' => 'budi@indonusa.ac.id',
             'items' => [
-                ['aset_id' => $this->routerAset->id, 'jumlah' => 10] // Stock is 5
+                ['kategori_aset' => $this->routerAset->jenis_aset, 'jumlah' => 10] // Stock is 5
             ],
             'tanggal_pinjam' => now()->format('Y-m-d'),
             'jam_pinjam' => '08:00',
@@ -140,7 +140,7 @@ class SimlabTest extends TestCase
         $response->assertSessionHas('error');
         $this->assertDatabaseMissing('peminjamans', [
             'user_id' => $this->student->id,
-            'aset_id' => $this->routerAset->id,
+            'kategori_aset' => $this->routerAset->jenis_aset,
         ]);
     }
 
@@ -156,7 +156,7 @@ class SimlabTest extends TestCase
             'kontak_peminjam' => '081234567890',
             'email_peminjam' => 'budi@indonusa.ac.id',
             'items' => [
-                ['aset_id' => $this->routerAset->id, 'jumlah' => 2]
+                ['kategori_aset' => $this->routerAset->jenis_aset, 'jumlah' => 2]
             ],
             'tanggal_pinjam' => now()->format('Y-m-d'),
             'jam_pinjam' => '08:00',
@@ -171,7 +171,8 @@ class SimlabTest extends TestCase
         $response->assertRedirect();
         $this->assertDatabaseHas('peminjamans', [
             'user_id' => $this->student->id,
-            'aset_id' => $this->routerAset->id,
+            'kategori_aset' => $this->routerAset->jenis_aset,
+            'aset_id' => null,
             'status_peminjaman' => 'menunggu_persetujuan',
         ]);
     }
@@ -210,7 +211,8 @@ class SimlabTest extends TestCase
     {
         $loan = Peminjaman::create([
             'user_id' => $this->student->id,
-            'aset_id' => $this->routerAset->id,
+            'aset_id' => null,
+            'kategori_aset' => $this->routerAset->jenis_aset,
             'jumlah' => 2,
             'tanggal_pinjam' => now()->format('Y-m-d'),
             'tanggal_kembali_rencana' => now()->addDays(3)->format('Y-m-d'),
@@ -219,11 +221,13 @@ class SimlabTest extends TestCase
 
         $response = $this->actingAs($this->admin)->patch("/admin/peminjaman/{$loan->id}/approve", [
             'action' => 'approve',
+            'aset_id' => $this->routerAset->id,
         ]);
 
         $response->assertRedirect();
         $this->assertDatabaseHas('peminjamans', [
             'id' => $loan->id,
+            'aset_id' => $this->routerAset->id,
             'status_peminjaman' => 'dipinjam',
         ]);
 
@@ -426,7 +430,7 @@ class SimlabTest extends TestCase
             'kontak_peminjam' => '0899999999',
             'email_peminjam' => 'guest@mail.com',
             'items' => [
-                ['aset_id' => $this->routerAset->id, 'jumlah' => 1]
+                ['kategori_aset' => $this->routerAset->jenis_aset, 'jumlah' => 1]
             ],
             'tanggal_pinjam' => now()->format('Y-m-d'),
             'jam_pinjam' => '08:00',
@@ -444,7 +448,8 @@ class SimlabTest extends TestCase
             'nama_peminjam' => 'Guest Borrower',
             'kontak_peminjam' => '0899999999',
             'nomor_induk' => 'NIK12345',
-            'aset_id' => $this->routerAset->id,
+            'kategori_aset' => $this->routerAset->jenis_aset,
+            'aset_id' => null,
             'status_peminjaman' => 'menunggu_persetujuan',
         ]);
     }

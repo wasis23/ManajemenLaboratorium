@@ -17,7 +17,7 @@ export default function Welcome({ auth, laboratoriums, asets, filters, borrowabl
         prodi_unit: '',
         kontak_peminjam: '',
         email_peminjam: auth.user ? auth.user.email : '',
-        items: [{ aset_id: '', jumlah: 1 }],
+        items: [{ kategori_aset: '', jumlah: 1 }],
         tanggal_pinjam: new Date().toISOString().split('T')[0],
         jam_pinjam: '08:00',
         tanggal_kembali_rencana: new Date().toISOString().split('T')[0],
@@ -28,11 +28,20 @@ export default function Welcome({ auth, laboratoriums, asets, filters, borrowabl
         setuju_syarat: false,
     });
 
+    const allCategories = ['PC', 'Monitor', 'Keyboard', 'Mouse'];
+
+    const getAvailableCategoriesForIndex = (index) => {
+        const selectedOthers = data.items
+            .filter((_, idx) => idx !== index)
+            .map(item => item.kategori_aset)
+            .filter(Boolean);
+            
+        return allCategories.filter(cat => !selectedOthers.includes(cat));
+    };
+
     const openBorrowModal = () => {
         setIsBorrowOpen(true);
-        if (borrowableAssets.length > 0) {
-            setData('items', [{ aset_id: borrowableAssets[0].id, jumlah: 1 }]);
-        }
+        setData('items', [{ kategori_aset: 'PC', jumlah: 1 }]);
     };
 
     const closeBorrowModal = () => {
@@ -47,8 +56,11 @@ export default function Welcome({ auth, laboratoriums, asets, filters, borrowabl
     };
 
     const addItemRow = () => {
-        const firstAssetId = borrowableAssets.length > 0 ? borrowableAssets[0].id : '';
-        setData('items', [...data.items, { aset_id: firstAssetId, jumlah: 1 }]);
+        const selectedCategories = data.items.map(item => item.kategori_aset).filter(Boolean);
+        const nextAvailable = allCategories.find(cat => !selectedCategories.includes(cat));
+        if (nextAvailable) {
+            setData('items', [...data.items, { kategori_aset: nextAvailable, jumlah: 1 }]);
+        }
     };
 
     const removeItemRow = (index) => {
@@ -543,32 +555,39 @@ export default function Welcome({ auth, laboratoriums, asets, filters, borrowabl
                                             <span className="flex h-5 w-5 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900/40 text-xs font-bold text-blue-600 dark:text-blue-400">II</span>
                                             <h4 className="text-xs font-bold text-slate-850 dark:text-slate-205 uppercase tracking-wider">Detail Alat Yang Dipinjam</h4>
                                         </div>
-                                        <button
-                                            type="button"
-                                            onClick={addItemRow}
-                                            className="inline-flex items-center gap-1 rounded bg-blue-50 hover:bg-blue-100 dark:bg-blue-950 dark:hover:bg-blue-900 px-2 py-1 text-xs font-bold text-blue-600 dark:text-blue-400 transition"
-                                        >
-                                            + Tambah Barang
-                                        </button>
+                                        {data.items.length < allCategories.length && (
+                                            <button
+                                                type="button"
+                                                onClick={addItemRow}
+                                                className="inline-flex items-center gap-1 rounded bg-blue-50 hover:bg-blue-100 dark:bg-blue-950 dark:hover:bg-blue-900 px-2 py-1 text-xs font-bold text-blue-600 dark:text-blue-400 transition"
+                                            >
+                                                + Tambah Barang
+                                            </button>
+                                        )}
                                     </div>
 
                                     <div className="space-y-3">
                                         {data.items.map((item, index) => (
                                             <div key={index} className="flex flex-col sm:flex-row gap-3 items-start sm:items-end bg-slate-50 dark:bg-slate-900/30 p-3 rounded-xl border border-slate-100 dark:border-slate-800 relative">
                                                 <div className="flex-1 w-full">
-                                                    <label className="block text-[10px] font-bold text-slate-400 mb-1 uppercase tracking-wider">Pilih Perangkat</label>
+                                                    <label className="block text-[10px] font-bold text-slate-400 mb-1 uppercase tracking-wider">Pilih Kategori Perangkat</label>
                                                     <select
-                                                        value={item.aset_id}
-                                                        onChange={(e) => handleItemChange(index, 'aset_id', e.target.value)}
+                                                        value={item.kategori_aset}
+                                                        onChange={(e) => handleItemChange(index, 'kategori_aset', e.target.value)}
                                                         className="w-full rounded-lg border border-slate-200/80 bg-white px-3 py-2 text-sm dark:border-slate-800 dark:bg-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500 text-slate-800 dark:text-slate-100"
                                                         required
                                                     >
-                                                        <option value="" disabled>-- Pilih Barang --</option>
-                                                        {borrowableAssets.map((aset) => (
-                                                            <option key={aset.id} value={aset.id}>
-                                                                {aset.jenis_aset} - {aset.nama_aset} ({aset.kode_aset}) [Lab: {aset.laboratorium?.nama_lab}] - Stok: {aset.stok} unit
+                                                        <option value="" disabled>-- Pilih Kategori --</option>
+                                                        {getAvailableCategoriesForIndex(index).map((cat) => (
+                                                            <option key={cat} value={cat}>
+                                                                {cat}
                                                             </option>
                                                         ))}
+                                                        {item.kategori_aset && !getAvailableCategoriesForIndex(index).includes(item.kategori_aset) && (
+                                                            <option value={item.kategori_aset}>
+                                                                {item.kategori_aset}
+                                                            </option>
+                                                        )}
                                                     </select>
                                                 </div>
                                                 <div className="w-full sm:w-28">
@@ -578,7 +597,7 @@ export default function Welcome({ auth, laboratoriums, asets, filters, borrowabl
                                                         min="1"
                                                         value={item.jumlah}
                                                         onChange={(e) => handleItemChange(index, 'jumlah', parseInt(e.target.value) || 1)}
-                                                        className="w-full rounded-lg border border-slate-200/80 bg-white px-3 py-2 text-sm dark:border-slate-800 dark:bg-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500 text-slate-800 dark:text-slate-100"
+                                                        className="w-full rounded-lg border border-slate-200/80 bg-white px-3 py-2 text-sm dark:border-slate-800 dark:bg-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500 text-slate-850 dark:text-slate-100"
                                                         required
                                                     />
                                                 </div>
@@ -716,8 +735,12 @@ export default function Welcome({ auth, laboratoriums, asets, filters, borrowabl
                                     </button>
                                     <button
                                         type="submit"
-                                        disabled={processing}
-                                        className="rounded-lg bg-blue-600 hover:bg-blue-700 px-5 py-2 text-sm font-semibold text-white shadow-md shadow-blue-500/10 transition"
+                                        disabled={processing || !data.setuju_syarat}
+                                        className={`rounded-lg px-5 py-2 text-sm font-semibold text-white shadow-md transition ${
+                                            data.setuju_syarat
+                                                ? 'bg-blue-600 hover:bg-blue-700 shadow-blue-500/10 cursor-pointer'
+                                                : 'bg-slate-300 dark:bg-slate-750 cursor-not-allowed opacity-50 shadow-none text-slate-500 dark:text-slate-400'
+                                        }`}
                                     >
                                         {processing ? 'Mengirim...' : 'Kirim Pengajuan'}
                                     </button>
