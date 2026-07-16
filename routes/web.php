@@ -35,7 +35,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::get('/dashboard', [AdminDashboardController::class, 'index'])->name('dashboard');
     
     // CRUD Laboratoriums & Asets
-    Route::resource('laboratorium', AdminLaboratoriumController::class)->except(['create', 'edit', 'show']);
+    Route::resource('laboratorium', AdminLaboratoriumController::class)->except(['create', 'edit']);
     Route::resource('aset', AdminAsetController::class)->except(['create', 'edit', 'show']);
     
     // Ticket Management

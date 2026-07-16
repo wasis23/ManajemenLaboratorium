@@ -101,7 +101,11 @@ export default function AdminDashboard({ assetStats, ticketStats, labs, pendingL
                             const pctRusakBerat = labTotal > 0 ? (lab.rusak_berat_count / labTotal) * 100 : 0;
 
                             return (
-                                <div key={lab.id} className="rounded-xl border border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-950 flex flex-col justify-between shadow-sm hover:shadow-md transition-all duration-300">
+                                <Link
+                                    key={lab.id}
+                                    href={route('admin.laboratorium.show', { laboratorium: lab.id })}
+                                    className="rounded-xl border border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-950 flex flex-col justify-between shadow-sm hover:shadow-md hover:border-blue-305 dark:hover:border-blue-900 transition-all duration-300 cursor-pointer text-left block"
+                                >
                                     <div>
                                         <div className="flex justify-between items-start">
                                             <h4 className="font-extrabold text-sm text-slate-800 dark:text-slate-205">{lab.nama_lab}</h4>
@@ -162,10 +166,10 @@ export default function AdminDashboard({ assetStats, ticketStats, labs, pendingL
                                     </div>
 
                                     <div className="mt-4 pt-3 border-t border-slate-100 dark:border-slate-900 flex justify-between items-center text-xs font-semibold">
-                                        <span className="text-slate-550 dark:text-slate-450">Rasio Baik: <span className="font-bold text-emerald-600 dark:text-emerald-450">{labTotal > 0 ? Math.round(pctBaik) : 100}%</span></span>
+                                        <span className="text-slate-550 dark:text-slate-455">Rasio Baik: <span className="font-bold text-emerald-600 dark:text-emerald-450">{labTotal > 0 ? Math.round(pctBaik) : 100}%</span></span>
                                         <span className="text-rose-600 dark:text-rose-400">Masalah: <span className="font-bold">{lab.rusak_count}</span></span>
                                     </div>
-                                </div>
+                                </Link>
                             );
                         })}
                     </div>

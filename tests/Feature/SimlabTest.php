@@ -173,6 +173,15 @@ class SimlabTest extends TestCase
     }
 
     /**
+     * Test admin can access laboratorium detail page.
+     */
+    public function test_admin_can_access_laboratorium_detail_page()
+    {
+        $response = $this->actingAs($this->admin)->get("/admin/laboratorium/{$this->lab->id}");
+        $response->assertStatus(200);
+    }
+
+    /**
      * Test admin can approve loan request, which decrements stock.
      */
     public function test_admin_can_approve_loan_request()

@@ -72,4 +72,34 @@ class AdminLaboratoriumController extends Controller
 
         return redirect()->back()->with('success', 'Laboratorium berhasil dihapus.');
     }
+
+    /**
+     * Display the specified laboratory detail.
+     */
+    public function show($id)
+    {
+        $laboratorium = Laboratorium::findOrFail($id);
+
+        // Load all assets in this laboratorium
+        $asets = \App\Models\Aset::where('laboratorium_id', $id)->get();
+
+        // Load all tickets for assets in this laboratorium
+        $tickets = \App\Models\Ticket::whereIn('aset_id', $asets->pluck('id'))
+            ->with(['aset'])
+            ->latest()
+            ->get();
+
+        // Load all loans for assets in this laboratorium
+        $peminjamans = \App\Models\Peminjaman::whereIn('aset_id', $asets->pluck('id'))
+            ->with(['aset', 'user'])
+            ->latest()
+            ->get();
+
+        return Inertia::render('Admin/Laboratorium/Show', [
+            'laboratorium' => $laboratorium,
+            'asets' => $asets,
+            'tickets' => $tickets,
+            'peminjamans' => $peminjamans,
+        ]);
+    }
 }
