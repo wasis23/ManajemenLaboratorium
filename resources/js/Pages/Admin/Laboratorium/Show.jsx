@@ -1,9 +1,39 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import { Head, Link } from '@inertiajs/react';
+import { Head, Link, useForm } from '@inertiajs/react';
 import { useState } from 'react';
+import Modal from '@/Components/Modal';
 
 export default function Show({ laboratorium, asets, tickets, peminjamans }) {
     const [activeTab, setActiveTab] = useState('assets');
+    const [isEditOpen, setIsEditOpen] = useState(false);
+    const [currentTicket, setCurrentTicket] = useState(null);
+
+    const { data, setData, patch, processing, errors, reset } = useForm({
+        status: '',
+        solusi: '',
+    });
+
+    const openEditModal = (ticket) => {
+        setCurrentTicket(ticket);
+        setData({
+            status: ticket.status,
+            solusi: ticket.solusi || '',
+        });
+        setIsEditOpen(true);
+    };
+
+    const closeEditModal = () => {
+        setIsEditOpen(false);
+        setCurrentTicket(null);
+        reset();
+    };
+
+    const handleSubmit = (e) => {
+        e.preventDefault();
+        patch(route('admin.tickets.update', { ticket: currentTicket.id }), {
+            onSuccess: () => closeEditModal(),
+        });
+    };
 
     // Stats
     const totalAssets = asets.reduce((acc, curr) => acc + curr.stok, 0);
@@ -112,6 +142,24 @@ export default function Show({ laboratorium, asets, tickets, peminjamans }) {
             <div className="space-y-6">
                 {/* Laboratory Info & Statistics Cards */}
                 <div className="grid gap-6 md:grid-cols-4">
+                    {/* Lab Metadata Card */}
+                    <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-950 flex flex-col justify-between">
+                        <div>
+                            <span className="text-[10px] font-bold uppercase tracking-widest text-blue-600 dark:text-blue-400">Informasi Ruangan</span>
+                            <h3 className="text-2xl font-extrabold text-slate-900 dark:text-white mt-2">{laboratorium.nama_lab}</h3>
+                            <div className="mt-4 space-y-2 text-xs text-slate-600 dark:text-slate-400 font-medium">
+                                <div className="flex items-center gap-2">
+                                    <span className="text-slate-400">📍 Lokasi:</span>
+                                    <span className="font-bold text-slate-800 dark:text-slate-250">{laboratorium.lokasi}</span>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    <span className="text-slate-400">🪑 Kapasitas Meja:</span>
+                                    <span className="font-bold text-slate-800 dark:text-slate-250">{laboratorium.kapasitas_meja} Unit Meja Kerja</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
                     {/* Stat: Total Assets by Category & Condition */}
                     <div className="md:col-span-2 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-950 flex flex-col justify-between">
                         <div>
@@ -209,24 +257,6 @@ export default function Show({ laboratorium, asets, tickets, peminjamans }) {
                         <div className="mt-4 pt-3 border-t border-slate-100 dark:border-slate-900/80 text-xs font-bold text-slate-400 flex justify-between">
                             <span>Total Seluruh Aset:</span>
                             <span className="text-slate-800 dark:text-slate-200 font-extrabold">{totalAssets} Unit</span>
-                        </div>
-                    </div>
-
-                    {/* Lab Metadata Card */}
-                    <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-950 flex flex-col justify-between">
-                        <div>
-                            <span className="text-[10px] font-bold uppercase tracking-widest text-blue-600 dark:text-blue-400">Informasi Ruangan</span>
-                            <h3 className="text-2xl font-extrabold text-slate-900 dark:text-white mt-2">{laboratorium.nama_lab}</h3>
-                            <div className="mt-4 space-y-2 text-xs text-slate-600 dark:text-slate-400 font-medium">
-                                <div className="flex items-center gap-2">
-                                    <span className="text-slate-400">📍 Lokasi:</span>
-                                    <span className="font-bold text-slate-800 dark:text-slate-250">{laboratorium.lokasi}</span>
-                                </div>
-                                <div className="flex items-center gap-2">
-                                    <span className="text-slate-400">🪑 Kapasitas Meja:</span>
-                                    <span className="font-bold text-slate-800 dark:text-slate-250">{laboratorium.kapasitas_meja} Unit Meja Kerja</span>
-                                </div>
-                            </div>
                         </div>
                     </div>
 
@@ -362,12 +392,13 @@ export default function Show({ laboratorium, asets, tickets, peminjamans }) {
                                         <th className="px-6 py-4">Status</th>
                                         <th className="px-6 py-4">Solusi Penanganan</th>
                                         <th className="px-6 py-4">Tanggal Laporan</th>
+                                        <th className="px-6 py-4 text-right">Aksi</th>
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-slate-100 dark:divide-slate-900 font-medium">
                                     {tickets.length === 0 ? (
                                         <tr>
-                                            <td colSpan="6" className="px-6 py-10 text-center text-slate-500">
+                                            <td colSpan="7" className="px-6 py-10 text-center text-slate-500">
                                                 Tidak ada riwayat kendala/tiket kerusakan pada laboratorium ini.
                                             </td>
                                         </tr>
@@ -398,6 +429,14 @@ export default function Show({ laboratorium, asets, tickets, peminjamans }) {
                                                         month: 'short',
                                                         year: 'numeric'
                                                     })}
+                                                </td>
+                                                <td className="px-6 py-4 text-right">
+                                                    <button
+                                                        onClick={() => openEditModal(t)}
+                                                        className="text-xs font-semibold text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
+                                                    >
+                                                        Tindak Lanjuti
+                                                    </button>
                                                 </td>
                                             </tr>
                                         ))
@@ -467,6 +506,72 @@ export default function Show({ laboratorium, asets, tickets, peminjamans }) {
                     </div>
                 )}
             </div>
+
+            {/* Action Ticket Modal */}
+            <Modal show={isEditOpen} onClose={closeEditModal}>
+                <div className="p-6">
+                    <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-6 border-b border-slate-100 pb-3 dark:border-slate-900">
+                        Tindak Lanjuti Kerusakan: {currentTicket?.aset?.kode_aset}
+                    </h3>
+                    <div className="bg-slate-50 dark:bg-slate-900 p-4 rounded-xl text-xs space-y-2 mb-6 border border-slate-100 dark:border-slate-800">
+                        <div><span className="font-bold text-slate-500">Nama Pelapor:</span> {currentTicket?.nama_pelapor}</div>
+                        <div><span className="font-bold text-slate-500">Deskripsi Kendala:</span> "{currentTicket?.deskripsi_kerusakan}"</div>
+                        <div><span className="font-bold text-slate-500">Kondisi Aset Saat Ini:</span> <span className="font-bold uppercase text-amber-700 dark:text-amber-455">{currentTicket?.aset?.kondisi?.replace('_', ' ')}</span></div>
+                    </div>
+
+                    <form onSubmit={handleSubmit} className="space-y-4">
+                        <div>
+                            <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1 uppercase tracking-wider">Perbarui Status Penanganan</label>
+                            <select
+                                value={data.status}
+                                onChange={(e) => setData('status', e.target.value)}
+                                className="w-full rounded-lg border border-slate-200/80 bg-slate-50 px-3 py-2 text-sm dark:border-slate-800 dark:bg-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500 text-slate-800 dark:text-slate-105"
+                                required
+                            >
+                                <option value="dilaporkan">Dilaporkan (Dalam Antrean)</option>
+                                <option value="sedang_diperiksa">Sedang Diperiksa</option>
+                                <option value="sedang_diperbaiki">Sedang Diperbaiki</option>
+                                <option value="selesai">Selesai (Aset Kembali Baik)</option>
+                                <option value="tidak_bisa_diperbaiki">Tidak Bisa Diperbaiki (Aset Rusak Berat)</option>
+                            </select>
+                            <span className="text-[10px] text-slate-400 mt-1 block">
+                                *Memilih "Selesai" akan mengubah kondisi fisik aset menjadi "Baik" secara otomatis.
+                                <br />
+                                *Memilih "Tidak Bisa Diperbaiki" akan mengubah kondisi fisik aset menjadi "Rusak Berat".
+                            </span>
+                        </div>
+
+                        <div>
+                            <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1 uppercase tracking-wider">Tindakan / Solusi Teknisi</label>
+                            <textarea
+                                value={data.solusi}
+                                onChange={(e) => setData('solusi', e.target.value)}
+                                className="w-full rounded-lg border border-slate-200/80 bg-slate-50 px-3 py-2 text-sm dark:border-slate-805 dark:bg-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500 text-slate-800 dark:text-slate-105"
+                                rows="4"
+                                placeholder="Jelaskan tindakan yang diambil, contoh: Kabel RAM dibersihkan, OS di-reinstall..."
+                            ></textarea>
+                            {errors.solusi && <span className="text-xs text-rose-500 mt-1 block">{errors.solusi}</span>}
+                        </div>
+
+                        <div className="flex justify-end gap-3 pt-4 border-t border-slate-100 dark:border-slate-900">
+                            <button
+                                type="button"
+                                onClick={closeEditModal}
+                                className="rounded-lg border border-slate-200 dark:border-slate-800 px-4 py-2 text-sm font-semibold text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-900 transition"
+                            >
+                                Batal
+                            </button>
+                            <button
+                                type="submit"
+                                disabled={processing}
+                                className="rounded-lg bg-blue-600 hover:bg-blue-700 px-5 py-2 text-sm font-semibold text-white shadow-md shadow-blue-500/10 transition"
+                            >
+                                {processing ? 'Menyimpan...' : 'Simpan Tindakan'}
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </Modal>
         </AuthenticatedLayout>
     );
 }
