@@ -477,7 +477,17 @@ export default function Show({ laboratorium, asets, tickets, peminjamans }) {
                                                     <span className="font-mono text-[10px] text-blue-600 dark:text-blue-450">{p.aset?.kode_aset}</span>
                                                 </td>
                                                 <td className="px-6 py-4 text-slate-800 dark:text-slate-200">
-                                                    {p.user?.name}
+                                                    {p.user ? (
+                                                        <>
+                                                            <span className="font-bold">{p.user.name}</span>
+                                                            <span className="text-[10px] text-slate-400 block mt-0.5">{p.user.email}</span>
+                                                        </>
+                                                    ) : (
+                                                        <>
+                                                            <span className="font-bold">{p.nama_peminjam}</span>
+                                                            <span className="text-[10px] text-amber-500 block mt-0.5">{p.kontak_peminjam} (Tamu)</span>
+                                                        </>
+                                                    )}
                                                 </td>
                                                 <td className="px-6 py-4 text-center text-slate-800 dark:text-slate-200 font-bold">
                                                     {p.jumlah} Pcs

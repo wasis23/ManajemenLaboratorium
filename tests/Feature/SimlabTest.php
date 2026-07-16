@@ -391,6 +391,47 @@ class SimlabTest extends TestCase
             'message' => 'Aset tidak ditemukan.'
         ]);
     }
+
+    /**
+     * Test guest can submit a loan request.
+     */
+    public function test_guest_can_submit_loan_request()
+    {
+        $response = $this->post('/peminjaman', [
+            'aset_id' => $this->routerAset->id,
+            'jumlah' => 1,
+            'tanggal_pinjam' => now()->format('Y-m-d'),
+            'tanggal_kembali_rencana' => now()->addDays(2)->format('Y-m-d'),
+            'nama_peminjam' => 'Guest Borrower',
+            'kontak_peminjam' => '0899999999',
+            'catatan' => 'Guest loan test',
+        ]);
+
+        $response->assertRedirect('/');
+        $this->assertDatabaseHas('peminjamans', [
+            'user_id' => null,
+            'nama_peminjam' => 'Guest Borrower',
+            'kontak_peminjam' => '0899999999',
+            'aset_id' => $this->routerAset->id,
+            'status_peminjaman' => 'menunggu_persetujuan',
+        ]);
+    }
+
+    /**
+     * Test guest cannot submit loan request without name and contact.
+     */
+    public function test_guest_cannot_submit_loan_without_identity()
+    {
+        $response = $this->post('/peminjaman', [
+            'aset_id' => $this->routerAset->id,
+            'jumlah' => 1,
+            'tanggal_pinjam' => now()->format('Y-m-d'),
+            'tanggal_kembali_rencana' => now()->addDays(2)->format('Y-m-d'),
+            'catatan' => 'Missing info test',
+        ]);
+
+        $response->assertSessionHasErrors(['nama_peminjam', 'kontak_peminjam']);
+    }
 }
 
 

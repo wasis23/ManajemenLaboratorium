@@ -68,13 +68,20 @@ class ClientLoanController extends Controller
      */
     public function store(Request $request)
     {
-        $request->validate([
+        $rules = [
             'aset_id' => 'required|exists:asets,id',
             'jumlah' => 'required|integer|min:1',
             'tanggal_pinjam' => 'required|date|after_or_equal:today',
             'tanggal_kembali_rencana' => 'required|date|after_or_equal:tanggal_pinjam',
             'catatan' => 'nullable|string|max:500',
-        ]);
+        ];
+
+        if (!auth()->check()) {
+            $rules['nama_peminjam'] = 'required|string|max:255';
+            $rules['kontak_peminjam'] = 'required|string|max:255';
+        }
+
+        $request->validate($rules);
 
         $aset = Aset::findOrFail($request->aset_id);
 
@@ -87,7 +94,9 @@ class ClientLoanController extends Controller
         }
 
         Peminjaman::create([
-            'user_id' => $request->user()->id,
+            'user_id' => auth()->id(),
+            'nama_peminjam' => auth()->check() ? null : $request->nama_peminjam,
+            'kontak_peminjam' => auth()->check() ? null : $request->kontak_peminjam,
             'aset_id' => $request->aset_id,
             'jumlah' => $request->jumlah,
             'tanggal_pinjam' => $request->tanggal_pinjam,
@@ -96,7 +105,11 @@ class ClientLoanController extends Controller
             'catatan' => $request->catatan,
         ]);
 
-        return redirect()->route('peminjaman.saya')->with('success', 'Pengajuan peminjaman berhasil dibuat. Silakan tunggu persetujuan admin.');
+        if (auth()->check()) {
+            return redirect()->route('peminjaman.saya')->with('success', 'Pengajuan peminjaman berhasil dibuat. Silakan tunggu persetujuan admin.');
+        } else {
+            return redirect()->route('public.catalog')->with('success', 'Pengajuan peminjaman (Tamu) berhasil dibuat! Silakan hubungi admin laboratorium untuk persetujuan.');
+        }
     }
 
     /**

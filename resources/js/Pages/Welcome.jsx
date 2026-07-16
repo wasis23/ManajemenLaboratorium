@@ -1,12 +1,46 @@
-import { Head, Link, router } from '@inertiajs/react';
+import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
 import { useState } from 'react';
+import Modal from '@/Components/Modal';
 
-export default function Welcome({ auth, laboratoriums, asets, filters }) {
+export default function Welcome({ auth, laboratoriums, asets, filters, borrowableAssets = [] }) {
+    const { flash } = usePage().props;
     const [search, setSearch] = useState(filters.search || '');
     const [selectedLab, setSelectedLab] = useState(filters.laboratorium_id || '');
     const [selectedJenis, setSelectedJenis] = useState(filters.jenis_aset || '');
     const [selectedKondisi, setSelectedKondisi] = useState(filters.kondisi || '');
     const [simulatedCode, setSimulatedCode] = useState('');
+    const [isBorrowOpen, setIsBorrowOpen] = useState(false);
+
+    const { data, setData, post, processing, errors, reset } = useForm({
+        aset_id: '',
+        jumlah: 1,
+        tanggal_pinjam: new Date().toISOString().split('T')[0],
+        tanggal_kembali_rencana: new Date().toISOString().split('T')[0],
+        nama_peminjam: '',
+        kontak_peminjam: '',
+        catatan: '',
+    });
+
+    const openBorrowModal = () => {
+        setIsBorrowOpen(true);
+        if (borrowableAssets.length > 0) {
+            setData('aset_id', borrowableAssets[0].id);
+        }
+    };
+
+    const closeBorrowModal = () => {
+        setIsBorrowOpen(false);
+        reset();
+    };
+
+    const handleBorrowSubmit = (e) => {
+        e.preventDefault();
+        post(route('peminjaman.store'), {
+            onSuccess: () => {
+                closeBorrowModal();
+            }
+        });
+    };
 
     const handleFilterChange = (newFilters) => {
         router.get(route('public.catalog'), {
@@ -136,6 +170,49 @@ export default function Welcome({ auth, laboratoriums, asets, filters }) {
                         </div>
                     </div>
                 </section>
+
+                {/* Flash Messages */}
+                {flash && flash.success && (
+                    <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 mt-6">
+                        <div className="rounded-xl bg-emerald-50 dark:bg-emerald-950/30 p-4 border border-emerald-200 dark:border-emerald-800 text-sm text-emerald-800 dark:text-emerald-400 font-semibold flex items-center gap-2">
+                            <span className="text-lg">✅</span>
+                            {flash.success}
+                        </div>
+                    </div>
+                )}
+                {flash && flash.error && (
+                    <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 mt-6">
+                        <div className="rounded-xl bg-rose-50 dark:bg-rose-950/30 p-4 border border-rose-200 dark:border-rose-800 text-sm text-rose-800 dark:text-rose-400 font-semibold flex items-center gap-2">
+                            <span className="text-lg">❌</span>
+                            {flash.error}
+                        </div>
+                    </div>
+                )}
+
+                {/* Loan Info Banner */}
+                <div className="bg-blue-600 text-white py-6 shadow-md">
+                    <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row items-center justify-between gap-6">
+                        <div className="flex items-center gap-4">
+                            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-white/10 text-white backdrop-blur-md">
+                                <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                </svg>
+                            </div>
+                            <div>
+                                <h3 className="text-lg font-bold">Peminjaman Perangkat Bebas Akses (Tanpa Akun)</h3>
+                                <p className="text-xs text-blue-100 mt-0.5 max-w-2xl leading-relaxed">
+                                    Butuh monitor, keyboard, atau mouse tambahan untuk praktikum? Sekarang Anda dapat mengajukan peminjaman secara langsung secara online tanpa perlu login. Cukup isi detail data diri Anda dan ambil barangnya di lab!
+                                </p>
+                            </div>
+                        </div>
+                        <button
+                            onClick={openBorrowModal}
+                            className="w-full md:w-auto shrink-0 rounded-xl bg-white px-5 py-3 text-sm font-bold text-blue-600 shadow-lg shadow-blue-900/20 hover:bg-slate-50 transition"
+                        >
+                            Ajukan Peminjaman Aset
+                        </button>
+                    </div>
+                </div>
 
                 {/* Filter and Catalog Section */}
                 <main className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
@@ -344,6 +421,136 @@ export default function Welcome({ auth, laboratoriums, asets, filters }) {
                         </div>
                     </div>
                 </main>
+
+                {/* Borrow Asset Modal */}
+                <Modal show={isBorrowOpen} onClose={closeBorrowModal}>
+                    <div className="p-6">
+                        <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-6 border-b border-slate-105 pb-3 dark:border-slate-805">
+                            Formulir Pengajuan Peminjaman Perangkat
+                        </h3>
+
+                        {borrowableAssets.length === 0 ? (
+                            <div className="text-center py-6 text-slate-500">
+                                Maaf, saat ini tidak ada aset (Monitor, Keyboard, Mouse) yang tersedia untuk dipinjam.
+                            </div>
+                        ) : (
+                            <form onSubmit={handleBorrowSubmit} className="space-y-4">
+                                {!auth.user && (
+                                    <div className="grid gap-4 sm:grid-cols-2">
+                                        <div>
+                                            <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1 uppercase tracking-wider">Nama Lengkap</label>
+                                            <input
+                                                type="text"
+                                                value={data.nama_peminjam}
+                                                onChange={(e) => setData('nama_peminjam', e.target.value)}
+                                                className="w-full rounded-lg border border-slate-200/80 bg-slate-50 px-3 py-2 text-sm dark:border-slate-800 dark:bg-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500 text-slate-800 dark:text-slate-100"
+                                                placeholder="Contoh: Budi Santoso"
+                                                required
+                                            />
+                                            {errors.nama_peminjam && <span className="text-xs text-rose-500 mt-1 block">{errors.nama_peminjam}</span>}
+                                        </div>
+                                        <div>
+                                            <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1 uppercase tracking-wider">Nomor WA / Email Kontak</label>
+                                            <input
+                                                type="text"
+                                                value={data.kontak_peminjam}
+                                                onChange={(e) => setData('kontak_peminjam', e.target.value)}
+                                                className="w-full rounded-lg border border-slate-200/80 bg-slate-50 px-3 py-2 text-sm dark:border-slate-800 dark:bg-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500 text-slate-800 dark:text-slate-100"
+                                                placeholder="Contoh: 08123456789 / budi@mail.com"
+                                                required
+                                            />
+                                            {errors.kontak_peminjam && <span className="text-xs text-rose-500 mt-1 block">{errors.kontak_peminjam}</span>}
+                                        </div>
+                                    </div>
+                                )}
+
+                                <div>
+                                    <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1 uppercase tracking-wider">Pilih Aset Perangkat</label>
+                                    <select
+                                        value={data.aset_id}
+                                        onChange={(e) => setData('aset_id', e.target.value)}
+                                        className="w-full rounded-lg border border-slate-200/80 bg-slate-50 px-3 py-2 text-sm dark:border-slate-800 dark:bg-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500 text-slate-800 dark:text-slate-100"
+                                        required
+                                    >
+                                        <option value="" disabled>-- Pilih Barang --</option>
+                                        {borrowableAssets.map((aset) => (
+                                            <option key={aset.id} value={aset.id}>
+                                                {aset.jenis_aset} - {aset.nama_aset} ({aset.kode_aset}) [Lab: {aset.laboratorium?.nama_lab}] - Stok: {aset.stok} unit
+                                            </option>
+                                        ))}
+                                    </select>
+                                    {errors.aset_id && <span className="text-xs text-rose-500 mt-1 block">{errors.aset_id}</span>}
+                                </div>
+
+                                <div className="grid gap-4 sm:grid-cols-3">
+                                    <div>
+                                        <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1 uppercase tracking-wider">Jumlah Pinjam</label>
+                                        <input
+                                            type="number"
+                                            min="1"
+                                            value={data.jumlah}
+                                            onChange={(e) => setData('jumlah', parseInt(e.target.value) || 1)}
+                                            className="w-full rounded-lg border border-slate-200/80 bg-slate-50 px-3 py-2 text-sm dark:border-slate-800 dark:bg-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500 text-slate-850 dark:text-slate-100"
+                                            required
+                                        />
+                                        {errors.jumlah && <span className="text-xs text-rose-500 mt-1 block">{errors.jumlah}</span>}
+                                    </div>
+                                    <div>
+                                        <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1 uppercase tracking-wider">Tanggal Pinjam</label>
+                                        <input
+                                            type="date"
+                                            value={data.tanggal_pinjam}
+                                            onChange={(e) => setData('tanggal_pinjam', e.target.value)}
+                                            className="w-full rounded-lg border border-slate-200/80 bg-slate-50 px-3 py-2 text-sm dark:border-slate-800 dark:bg-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500 text-slate-850 dark:text-slate-100"
+                                            required
+                                        />
+                                        {errors.tanggal_pinjam && <span className="text-xs text-rose-500 mt-1 block">{errors.tanggal_pinjam}</span>}
+                                    </div>
+                                    <div>
+                                        <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1 uppercase tracking-wider">Rencana Kembali</label>
+                                        <input
+                                            type="date"
+                                            value={data.tanggal_kembali_rencana}
+                                            onChange={(e) => setData('tanggal_kembali_rencana', e.target.value)}
+                                            className="w-full rounded-lg border border-slate-200/80 bg-slate-50 px-3 py-2 text-sm dark:border-slate-800 dark:bg-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500 text-slate-850 dark:text-slate-100"
+                                            required
+                                        />
+                                        {errors.tanggal_kembali_rencana && <span className="text-xs text-rose-500 mt-1 block">{errors.tanggal_kembali_rencana}</span>}
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1 uppercase tracking-wider">Keperluan / Catatan</label>
+                                    <textarea
+                                        value={data.catatan}
+                                        onChange={(e) => setData('catatan', e.target.value)}
+                                        className="w-full rounded-lg border border-slate-200/80 bg-slate-50 px-3 py-2 text-sm dark:border-slate-800 dark:bg-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500 text-slate-850 dark:text-slate-100"
+                                        rows="3"
+                                        placeholder="Tuliskan alasan peminjaman atau keterangan tambahan..."
+                                    ></textarea>
+                                    {errors.catatan && <span className="text-xs text-rose-500 mt-1 block">{errors.catatan}</span>}
+                                </div>
+
+                                <div className="flex justify-end gap-3 pt-4 border-t border-slate-100 dark:border-slate-800">
+                                    <button
+                                        type="button"
+                                        onClick={closeBorrowModal}
+                                        className="rounded-lg border border-slate-200 dark:border-slate-800 px-4 py-2 text-sm font-semibold text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-900 transition"
+                                    >
+                                        Batal
+                                    </button>
+                                    <button
+                                        type="submit"
+                                        disabled={processing}
+                                        className="rounded-lg bg-blue-600 hover:bg-blue-700 px-5 py-2 text-sm font-semibold text-white shadow-md shadow-blue-500/10 transition"
+                                    >
+                                        {processing ? 'Mengirim...' : 'Kirim Pengajuan'}
+                                    </button>
+                                </div>
+                            </form>
+                        )}
+                    </div>
+                </Modal>
             </div>
         </>
     );

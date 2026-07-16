@@ -44,9 +44,17 @@ class PublicController extends Controller
         $asets = $asetsQuery->orderBy('kode_aset', 'asc')->paginate(12)->withQueryString();
         $laboratoriums = Laboratorium::all();
 
+        $borrowableAssets = Aset::with('laboratorium')
+            ->whereIn('jenis_aset', ['Monitor', 'Keyboard', 'Mouse'])
+            ->where('kondisi', 'baik')
+            ->where('stok', '>', 0)
+            ->orderBy('nama_aset', 'asc')
+            ->get();
+
         return Inertia::render('Welcome', [
             'asets' => $asets,
             'laboratoriums' => $laboratoriums,
+            'borrowableAssets' => $borrowableAssets,
             'filters' => $request->only(['search', 'laboratorium_id', 'jenis_aset', 'kondisi']),
             'canLogin' => true,
             'canRegister' => true,

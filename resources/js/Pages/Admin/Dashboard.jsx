@@ -205,7 +205,7 @@ export default function AdminDashboard({ assetStats, ticketStats, labs, pendingL
                                                 {loan.aset.kode_aset}
                                             </span>
                                             <span className="text-[10px] text-slate-500">
-                                                Oleh: <span className="font-bold">{loan.user.name}</span>
+                                                Oleh: <span className="font-bold">{loan.user ? loan.user.name : `${loan.nama_peminjam} (Tamu)`}</span>
                                             </span>
                                         </div>
 

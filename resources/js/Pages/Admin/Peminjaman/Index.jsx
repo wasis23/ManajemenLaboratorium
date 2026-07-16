@@ -79,9 +79,19 @@ export default function Index({ loans, filters }) {
                                     loans.data.map((loan) => (
                                         <tr key={loan.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-900/10">
                                             <td className="px-6 py-4">
-                                                <span className="font-bold text-slate-850 dark:text-slate-200 block">{loan.user.name}</span>
-                                                <span className="text-[10px] text-slate-400 block mt-0.5">{loan.user.email}</span>
-                                                <span className="text-[10px] text-slate-500 uppercase tracking-widest font-semibold block mt-0.5">{loan.user.role}</span>
+                                                {loan.user ? (
+                                                    <>
+                                                        <span className="font-bold text-slate-850 dark:text-slate-200 block">{loan.user.name}</span>
+                                                        <span className="text-[10px] text-slate-400 block mt-0.5">{loan.user.email}</span>
+                                                        <span className="text-[10px] text-slate-500 uppercase tracking-widest font-semibold block mt-0.5">{loan.user.role}</span>
+                                                    </>
+                                                ) : (
+                                                    <>
+                                                        <span className="font-bold text-slate-850 dark:text-slate-200 block">{loan.nama_peminjam}</span>
+                                                        <span className="text-[10px] text-slate-400 block mt-0.5">{loan.kontak_peminjam}</span>
+                                                        <span className="text-[10px] text-amber-500 uppercase tracking-widest font-semibold block mt-0.5">Tamu / Tanpa Akun</span>
+                                                    </>
+                                                )}
                                             </td>
                                             <td className="px-6 py-4">
                                                 <span className="font-mono font-bold text-blue-600 dark:text-blue-400 block">{loan.aset.kode_aset}</span>
