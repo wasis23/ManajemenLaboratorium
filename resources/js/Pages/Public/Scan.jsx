@@ -70,7 +70,15 @@ export default function Scan({ aset, workstationAssets = [], activeTickets = [] 
 
                     {borrowForm.wasSuccessful && (
                         <div className="mb-6 p-4 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 dark:bg-emerald-950/20 dark:border-emerald-900 dark:text-emerald-400 text-sm font-semibold">
-                            🎉 Pengajuan peminjaman workstation via barcode berhasil diajukan! Silakan hubungi admin laboratorium untuk persetujuan.
+                            🎉 Pengajuan peminjaman workstation via barcode berhasil diajukan! Silakan hubungi admin laboratorium untuk persetujuan:{' '}
+                            <a
+                                href="https://wa.me/62859106886664?text=Halo%20Mas%20Wasis%2C%20saya%20baru%20saja%20membuat%20pengajuan%20peminjaman%20workstation%20via%20barcode%20di%20SIMLAB.%20Mohon%20untuk%20diperiksa%20dan%20disetujui.%20Terima%20kasih!"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="underline hover:text-emerald-600 dark:hover:text-emerald-300 transition"
+                            >
+                                Mas Wasis (+62859106886664)
+                            </a>
                         </div>
                     )}
 
