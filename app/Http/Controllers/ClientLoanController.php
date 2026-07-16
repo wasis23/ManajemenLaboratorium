@@ -69,46 +69,70 @@ class ClientLoanController extends Controller
     public function store(Request $request)
     {
         $rules = [
-            'aset_id' => 'required|exists:asets,id',
-            'jumlah' => 'required|integer|min:1',
+            'nama_peminjam' => 'required|string|max:255',
+            'nomor_induk' => 'required|string|max:100',
+            'prodi_unit' => 'required|string|max:255',
+            'kontak_peminjam' => 'required|string|max:100',
+            'email_peminjam' => 'required|email|max:255',
+            
+            // Items validation
+            'items' => 'required|array|min:1',
+            'items.*.aset_id' => 'required|exists:asets,id',
+            'items.*.jumlah' => 'required|integer|min:1',
+            
+            // Time & purpose
             'tanggal_pinjam' => 'required|date|after_or_equal:today',
+            'jam_pinjam' => 'required|string',
             'tanggal_kembali_rencana' => 'required|date|after_or_equal:tanggal_pinjam',
+            'jam_kembali_rencana' => 'required|string',
+            'tujuan_penggunaan' => 'required|string|max:1000',
+            'lokasi_penggunaan' => 'required|string|max:255',
             'catatan' => 'nullable|string|max:500',
+            'setuju_syarat' => 'required|accepted',
         ];
-
-        if (!auth()->check()) {
-            $rules['nama_peminjam'] = 'required|string|max:255';
-            $rules['kontak_peminjam'] = 'required|string|max:255';
-        }
 
         $request->validate($rules);
 
-        $aset = Aset::findOrFail($request->aset_id);
+        // Verify each item's stock and loanability
+        foreach ($request->items as $item) {
+            $aset = Aset::findOrFail($item['aset_id']);
+            
+            if (!in_array($aset->jenis_aset, ['Monitor', 'Keyboard', 'Mouse'])) {
+                return redirect()->back()->with('error', "Aset {$aset->nama_aset} tidak dapat dipinjam.");
+            }
 
-        if (!in_array($aset->jenis_aset, ['Monitor', 'Keyboard', 'Mouse'])) {
-            return redirect()->back()->with('error', 'Aset ini tidak dapat dipinjam.');
+            if ($item['jumlah'] > $aset->stok) {
+                return redirect()->back()->with('error', "Stok untuk {$aset->nama_aset} tidak mencukupi. Tersisa: {$aset->stok} unit.");
+            }
         }
 
-        if ($request->jumlah > $aset->stok) {
-            return redirect()->back()->with('error', "Stok tidak mencukupi. Tersisa: {$aset->stok} unit.");
+        // Create a Peminjaman record for each item
+        foreach ($request->items as $item) {
+            Peminjaman::create([
+                'user_id' => auth()->id(),
+                'nama_peminjam' => $request->nama_peminjam,
+                'nomor_induk' => $request->nomor_induk,
+                'prodi_unit' => $request->prodi_unit,
+                'kontak_peminjam' => $request->kontak_peminjam,
+                'email_peminjam' => $request->email_peminjam,
+                'aset_id' => $item['aset_id'],
+                'jumlah' => $item['jumlah'],
+                'tanggal_pinjam' => $request->tanggal_pinjam,
+                'jam_pinjam' => $request->jam_pinjam,
+                'tanggal_kembali_rencana' => $request->tanggal_kembali_rencana,
+                'jam_kembali_rencana' => $request->jam_kembali_rencana,
+                'tujuan_penggunaan' => $request->tujuan_penggunaan,
+                'lokasi_penggunaan' => $request->lokasi_penggunaan,
+                'status_peminjaman' => 'menunggu_persetujuan',
+                'catatan' => $request->catatan,
+                'setuju_syarat' => true,
+            ]);
         }
-
-        Peminjaman::create([
-            'user_id' => auth()->id(),
-            'nama_peminjam' => auth()->check() ? null : $request->nama_peminjam,
-            'kontak_peminjam' => auth()->check() ? null : $request->kontak_peminjam,
-            'aset_id' => $request->aset_id,
-            'jumlah' => $request->jumlah,
-            'tanggal_pinjam' => $request->tanggal_pinjam,
-            'tanggal_kembali_rencana' => $request->tanggal_kembali_rencana,
-            'status_peminjaman' => 'menunggu_persetujuan',
-            'catatan' => $request->catatan,
-        ]);
 
         if (auth()->check()) {
             return redirect()->route('peminjaman.saya')->with('success', 'Pengajuan peminjaman berhasil dibuat. Silakan tunggu persetujuan admin.');
         } else {
-            return redirect()->route('public.catalog')->with('success', 'Pengajuan peminjaman (Tamu) berhasil dibuat! Silakan hubungi admin laboratorium untuk persetujuan.');
+            return redirect()->route('public.catalog')->with('success', 'Pengajuan peminjaman berhasil dibuat! Silakan hubungi admin laboratorium untuk persetujuan.');
         }
     }
 

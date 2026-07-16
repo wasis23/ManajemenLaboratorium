@@ -12,25 +12,48 @@ export default function Welcome({ auth, laboratoriums, asets, filters, borrowabl
     const [isBorrowOpen, setIsBorrowOpen] = useState(false);
 
     const { data, setData, post, processing, errors, reset } = useForm({
-        aset_id: '',
-        jumlah: 1,
-        tanggal_pinjam: new Date().toISOString().split('T')[0],
-        tanggal_kembali_rencana: new Date().toISOString().split('T')[0],
-        nama_peminjam: '',
+        nama_peminjam: auth.user ? auth.user.name : '',
+        nomor_induk: '',
+        prodi_unit: '',
         kontak_peminjam: '',
+        email_peminjam: auth.user ? auth.user.email : '',
+        items: [{ aset_id: '', jumlah: 1 }],
+        tanggal_pinjam: new Date().toISOString().split('T')[0],
+        jam_pinjam: '08:00',
+        tanggal_kembali_rencana: new Date().toISOString().split('T')[0],
+        jam_kembali_rencana: '16:00',
+        tujuan_penggunaan: '',
+        lokasi_penggunaan: '',
         catatan: '',
+        setuju_syarat: false,
     });
 
     const openBorrowModal = () => {
         setIsBorrowOpen(true);
         if (borrowableAssets.length > 0) {
-            setData('aset_id', borrowableAssets[0].id);
+            setData('items', [{ aset_id: borrowableAssets[0].id, jumlah: 1 }]);
         }
     };
 
     const closeBorrowModal = () => {
         setIsBorrowOpen(false);
         reset();
+    };
+
+    const handleItemChange = (index, field, value) => {
+        const newItems = [...data.items];
+        newItems[index][field] = value;
+        setData('items', newItems);
+    };
+
+    const addItemRow = () => {
+        const firstAssetId = borrowableAssets.length > 0 ? borrowableAssets[0].id : '';
+        setData('items', [...data.items, { aset_id: firstAssetId, jumlah: 1 }]);
+    };
+
+    const removeItemRow = (index) => {
+        const newItems = data.items.filter((_, i) => i !== index);
+        setData('items', newItems);
     };
 
     const handleBorrowSubmit = (e) => {
@@ -423,112 +446,264 @@ export default function Welcome({ auth, laboratoriums, asets, filters, borrowabl
                 </main>
 
                 {/* Borrow Asset Modal */}
-                <Modal show={isBorrowOpen} onClose={closeBorrowModal}>
-                    <div className="p-6">
-                        <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-6 border-b border-slate-105 pb-3 dark:border-slate-805">
-                            Formulir Pengajuan Peminjaman Perangkat
+                <Modal show={isBorrowOpen} onClose={closeBorrowModal} maxWidth="2xl">
+                    <div className="p-6 max-h-[85vh] overflow-y-auto">
+                        <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-6 border-b border-slate-100 pb-3 dark:border-slate-800 flex items-center justify-between">
+                            <span>Formulir Pengajuan Peminjaman Perangkat</span>
+                            <button
+                                type="button"
+                                onClick={closeBorrowModal}
+                                className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-205 text-base font-normal"
+                            >
+                                ✕
+                            </button>
                         </h3>
 
                         {borrowableAssets.length === 0 ? (
-                            <div className="text-center py-6 text-slate-500">
+                            <div className="text-center py-8 text-slate-500">
                                 Maaf, saat ini tidak ada aset (Monitor, Keyboard, Mouse) yang tersedia untuk dipinjam.
                             </div>
                         ) : (
-                            <form onSubmit={handleBorrowSubmit} className="space-y-4">
-                                {!auth.user && (
+                            <form onSubmit={handleBorrowSubmit} className="space-y-6">
+                                
+                                {/* I. IDENTITAS PEMINJAM */}
+                                <div className="space-y-3">
+                                    <div className="flex items-center gap-2 border-b border-slate-100 dark:border-slate-800 pb-1">
+                                        <span className="flex h-5 w-5 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900/40 text-xs font-bold text-blue-600 dark:text-blue-400">I</span>
+                                        <h4 className="text-xs font-bold text-slate-850 dark:text-slate-205 uppercase tracking-wider">Identitas Peminjam</h4>
+                                    </div>
                                     <div className="grid gap-4 sm:grid-cols-2">
-                                        <div>
+                                        <div className="sm:col-span-2">
                                             <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1 uppercase tracking-wider">Nama Lengkap</label>
                                             <input
                                                 type="text"
                                                 value={data.nama_peminjam}
                                                 onChange={(e) => setData('nama_peminjam', e.target.value)}
                                                 className="w-full rounded-lg border border-slate-200/80 bg-slate-50 px-3 py-2 text-sm dark:border-slate-800 dark:bg-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500 text-slate-800 dark:text-slate-100"
-                                                placeholder="Contoh: Budi Santoso"
+                                                placeholder="Nama lengkap sesuai kartu identitas"
                                                 required
                                             />
                                             {errors.nama_peminjam && <span className="text-xs text-rose-500 mt-1 block">{errors.nama_peminjam}</span>}
                                         </div>
                                         <div>
-                                            <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1 uppercase tracking-wider">Nomor WA / Email Kontak</label>
+                                            <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1 uppercase tracking-wider">Nomor Induk (NIM / NIDN / NIK)</label>
+                                            <input
+                                                type="text"
+                                                value={data.nomor_induk}
+                                                onChange={(e) => setData('nomor_induk', e.target.value)}
+                                                className="w-full rounded-lg border border-slate-200/80 bg-slate-50 px-3 py-2 text-sm dark:border-slate-800 dark:bg-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500 text-slate-800 dark:text-slate-100"
+                                                placeholder="Contoh: 220010102"
+                                                required
+                                            />
+                                            {errors.nomor_induk && <span className="text-xs text-rose-500 mt-1 block">{errors.nomor_induk}</span>}
+                                        </div>
+                                        <div>
+                                            <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1 uppercase tracking-wider">Program Studi / Unit Kerja</label>
+                                            <input
+                                                type="text"
+                                                value={data.prodi_unit}
+                                                onChange={(e) => setData('prodi_unit', e.target.value)}
+                                                className="w-full rounded-lg border border-slate-200/80 bg-slate-50 px-3 py-2 text-sm dark:border-slate-800 dark:bg-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500 text-slate-800 dark:text-slate-100"
+                                                placeholder="Contoh: Teknik Informatika / Biro Akademik"
+                                                required
+                                            />
+                                            {errors.prodi_unit && <span className="text-xs text-rose-500 mt-1 block">{errors.prodi_unit}</span>}
+                                        </div>
+                                        <div>
+                                            <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1 uppercase tracking-wider">Nomor WhatsApp / Kontak Aktif</label>
                                             <input
                                                 type="text"
                                                 value={data.kontak_peminjam}
                                                 onChange={(e) => setData('kontak_peminjam', e.target.value)}
                                                 className="w-full rounded-lg border border-slate-200/80 bg-slate-50 px-3 py-2 text-sm dark:border-slate-800 dark:bg-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500 text-slate-800 dark:text-slate-100"
-                                                placeholder="Contoh: 08123456789 / budi@mail.com"
+                                                placeholder="Contoh: 081234567890"
                                                 required
                                             />
                                             {errors.kontak_peminjam && <span className="text-xs text-rose-500 mt-1 block">{errors.kontak_peminjam}</span>}
                                         </div>
+                                        <div>
+                                            <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1 uppercase tracking-wider">Email Aktif</label>
+                                            <input
+                                                type="email"
+                                                value={data.email_peminjam}
+                                                onChange={(e) => setData('email_peminjam', e.target.value)}
+                                                className="w-full rounded-lg border border-slate-200/80 bg-slate-50 px-3 py-2 text-sm dark:border-slate-800 dark:bg-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500 text-slate-800 dark:text-slate-100"
+                                                placeholder="Contoh: nama@domain.com"
+                                                required
+                                            />
+                                            {errors.email_peminjam && <span className="text-xs text-rose-500 mt-1 block">{errors.email_peminjam}</span>}
+                                        </div>
                                     </div>
-                                )}
+                                </div>
 
-                                <div>
-                                    <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1 uppercase tracking-wider">Pilih Aset Perangkat</label>
-                                    <select
-                                        value={data.aset_id}
-                                        onChange={(e) => setData('aset_id', e.target.value)}
-                                        className="w-full rounded-lg border border-slate-200/80 bg-slate-50 px-3 py-2 text-sm dark:border-slate-800 dark:bg-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500 text-slate-800 dark:text-slate-100"
-                                        required
-                                    >
-                                        <option value="" disabled>-- Pilih Barang --</option>
-                                        {borrowableAssets.map((aset) => (
-                                            <option key={aset.id} value={aset.id}>
-                                                {aset.jenis_aset} - {aset.nama_aset} ({aset.kode_aset}) [Lab: {aset.laboratorium?.nama_lab}] - Stok: {aset.stok} unit
-                                            </option>
+                                {/* II. DETAIL ALAT YANG DIPINJAM */}
+                                <div className="space-y-3">
+                                    <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-1">
+                                        <div className="flex items-center gap-2">
+                                            <span className="flex h-5 w-5 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900/40 text-xs font-bold text-blue-600 dark:text-blue-400">II</span>
+                                            <h4 className="text-xs font-bold text-slate-850 dark:text-slate-205 uppercase tracking-wider">Detail Alat Yang Dipinjam</h4>
+                                        </div>
+                                        <button
+                                            type="button"
+                                            onClick={addItemRow}
+                                            className="inline-flex items-center gap-1 rounded bg-blue-50 hover:bg-blue-100 dark:bg-blue-950 dark:hover:bg-blue-900 px-2 py-1 text-xs font-bold text-blue-600 dark:text-blue-400 transition"
+                                        >
+                                            + Tambah Barang
+                                        </button>
+                                    </div>
+
+                                    <div className="space-y-3">
+                                        {data.items.map((item, index) => (
+                                            <div key={index} className="flex flex-col sm:flex-row gap-3 items-start sm:items-end bg-slate-50 dark:bg-slate-900/30 p-3 rounded-xl border border-slate-100 dark:border-slate-800 relative">
+                                                <div className="flex-1 w-full">
+                                                    <label className="block text-[10px] font-bold text-slate-400 mb-1 uppercase tracking-wider">Pilih Perangkat</label>
+                                                    <select
+                                                        value={item.aset_id}
+                                                        onChange={(e) => handleItemChange(index, 'aset_id', e.target.value)}
+                                                        className="w-full rounded-lg border border-slate-200/80 bg-white px-3 py-2 text-sm dark:border-slate-800 dark:bg-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500 text-slate-800 dark:text-slate-100"
+                                                        required
+                                                    >
+                                                        <option value="" disabled>-- Pilih Barang --</option>
+                                                        {borrowableAssets.map((aset) => (
+                                                            <option key={aset.id} value={aset.id}>
+                                                                {aset.jenis_aset} - {aset.nama_aset} ({aset.kode_aset}) [Lab: {aset.laboratorium?.nama_lab}] - Stok: {aset.stok} unit
+                                                            </option>
+                                                        ))}
+                                                    </select>
+                                                </div>
+                                                <div className="w-full sm:w-28">
+                                                    <label className="block text-[10px] font-bold text-slate-400 mb-1 uppercase tracking-wider">Jumlah</label>
+                                                    <input
+                                                        type="number"
+                                                        min="1"
+                                                        value={item.jumlah}
+                                                        onChange={(e) => handleItemChange(index, 'jumlah', parseInt(e.target.value) || 1)}
+                                                        className="w-full rounded-lg border border-slate-200/80 bg-white px-3 py-2 text-sm dark:border-slate-800 dark:bg-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500 text-slate-800 dark:text-slate-100"
+                                                        required
+                                                    />
+                                                </div>
+                                                {data.items.length > 1 && (
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => removeItemRow(index)}
+                                                        className="w-full sm:w-auto text-rose-500 hover:text-rose-700 bg-rose-50 dark:bg-rose-950/20 hover:bg-rose-100 p-2 rounded-lg text-xs font-semibold self-stretch sm:self-auto flex items-center justify-center gap-1 transition"
+                                                    >
+                                                        <span>Hapus</span>
+                                                    </button>
+                                                )}
+                                            </div>
                                         ))}
-                                    </select>
-                                    {errors.aset_id && <span className="text-xs text-rose-500 mt-1 block">{errors.aset_id}</span>}
+                                    </div>
+                                    {errors.items && <span className="text-xs text-rose-500 mt-1 block">{errors.items}</span>}
                                 </div>
 
-                                <div className="grid gap-4 sm:grid-cols-3">
-                                    <div>
-                                        <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1 uppercase tracking-wider">Jumlah Pinjam</label>
-                                        <input
-                                            type="number"
-                                            min="1"
-                                            value={data.jumlah}
-                                            onChange={(e) => setData('jumlah', parseInt(e.target.value) || 1)}
-                                            className="w-full rounded-lg border border-slate-200/80 bg-slate-50 px-3 py-2 text-sm dark:border-slate-800 dark:bg-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500 text-slate-850 dark:text-slate-100"
-                                            required
-                                        />
-                                        {errors.jumlah && <span className="text-xs text-rose-500 mt-1 block">{errors.jumlah}</span>}
+                                {/* III. WAKTU DAN TUJUAN PEMINJAMAN */}
+                                <div className="space-y-3">
+                                    <div className="flex items-center gap-2 border-b border-slate-100 dark:border-slate-800 pb-1">
+                                        <span className="flex h-5 w-5 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900/40 text-xs font-bold text-blue-600 dark:text-blue-400">III</span>
+                                        <h4 className="text-xs font-bold text-slate-850 dark:text-slate-205 uppercase tracking-wider">Waktu & Tujuan Peminjaman</h4>
                                     </div>
-                                    <div>
-                                        <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1 uppercase tracking-wider">Tanggal Pinjam</label>
-                                        <input
-                                            type="date"
-                                            value={data.tanggal_pinjam}
-                                            onChange={(e) => setData('tanggal_pinjam', e.target.value)}
-                                            className="w-full rounded-lg border border-slate-200/80 bg-slate-50 px-3 py-2 text-sm dark:border-slate-800 dark:bg-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500 text-slate-850 dark:text-slate-100"
-                                            required
-                                        />
-                                        {errors.tanggal_pinjam && <span className="text-xs text-rose-500 mt-1 block">{errors.tanggal_pinjam}</span>}
-                                    </div>
-                                    <div>
-                                        <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1 uppercase tracking-wider">Rencana Kembali</label>
-                                        <input
-                                            type="date"
-                                            value={data.tanggal_kembali_rencana}
-                                            onChange={(e) => setData('tanggal_kembali_rencana', e.target.value)}
-                                            className="w-full rounded-lg border border-slate-200/80 bg-slate-50 px-3 py-2 text-sm dark:border-slate-800 dark:bg-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500 text-slate-850 dark:text-slate-100"
-                                            required
-                                        />
-                                        {errors.tanggal_kembali_rencana && <span className="text-xs text-rose-500 mt-1 block">{errors.tanggal_kembali_rencana}</span>}
+                                    <div className="grid gap-4 sm:grid-cols-2">
+                                        <div>
+                                            <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1 uppercase tracking-wider">Tanggal & Jam Pengambilan</label>
+                                            <div className="flex gap-2">
+                                                <input
+                                                    type="date"
+                                                    value={data.tanggal_pinjam}
+                                                    onChange={(e) => setData('tanggal_pinjam', e.target.value)}
+                                                    className="flex-1 rounded-lg border border-slate-200/80 bg-slate-50 px-3 py-2 text-sm dark:border-slate-800 dark:bg-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500 text-slate-800 dark:text-slate-100"
+                                                    required
+                                                />
+                                                <input
+                                                    type="time"
+                                                    value={data.jam_pinjam}
+                                                    onChange={(e) => setData('jam_pinjam', e.target.value)}
+                                                    className="w-24 rounded-lg border border-slate-200/80 bg-slate-50 px-3 py-2 text-sm dark:border-slate-800 dark:bg-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500 text-slate-800 dark:text-slate-100"
+                                                    required
+                                                />
+                                            </div>
+                                            {errors.tanggal_pinjam && <span className="text-xs text-rose-500 mt-1 block">{errors.tanggal_pinjam}</span>}
+                                            {errors.jam_pinjam && <span className="text-xs text-rose-500 mt-1 block">{errors.jam_pinjam}</span>}
+                                        </div>
+                                        <div>
+                                            <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1 uppercase tracking-wider">Tanggal & Jam Pengembalian</label>
+                                            <div className="flex gap-2">
+                                                <input
+                                                    type="date"
+                                                    value={data.tanggal_kembali_rencana}
+                                                    onChange={(e) => setData('tanggal_kembali_rencana', e.target.value)}
+                                                    className="flex-1 rounded-lg border border-slate-200/80 bg-slate-50 px-3 py-2 text-sm dark:border-slate-800 dark:bg-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500 text-slate-805 dark:text-slate-100"
+                                                    required
+                                                />
+                                                <input
+                                                    type="time"
+                                                    value={data.jam_kembali_rencana}
+                                                    onChange={(e) => setData('jam_kembali_rencana', e.target.value)}
+                                                    className="w-24 rounded-lg border border-slate-200/80 bg-slate-50 px-3 py-2 text-sm dark:border-slate-800 dark:bg-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500 text-slate-805 dark:text-slate-100"
+                                                    required
+                                                />
+                                            </div>
+                                            {errors.tanggal_kembali_rencana && <span className="text-xs text-rose-500 mt-1 block">{errors.tanggal_kembali_rencana}</span>}
+                                            {errors.jam_kembali_rencana && <span className="text-xs text-rose-500 mt-1 block">{errors.jam_kembali_rencana}</span>}
+                                        </div>
+                                        <div className="sm:col-span-2">
+                                            <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1 uppercase tracking-wider">Tujuan Penggunaan / Nama Kegiatan</label>
+                                            <input
+                                                type="text"
+                                                value={data.tujuan_penggunaan}
+                                                onChange={(e) => setData('tujuan_penggunaan', e.target.value)}
+                                                className="w-full rounded-lg border border-slate-200/80 bg-slate-50 px-3 py-2 text-sm dark:border-slate-800 dark:bg-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500 text-slate-800 dark:text-slate-100"
+                                                placeholder="Contoh: Praktikum Pemrograman Web / Workshop Jaringan"
+                                                required
+                                            />
+                                            {errors.tujuan_penggunaan && <span className="text-xs text-rose-500 mt-1 block">{errors.tujuan_penggunaan}</span>}
+                                        </div>
+                                        <div className="sm:col-span-2">
+                                            <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1 uppercase tracking-wider">Lokasi Penggunaan Alat</label>
+                                            <input
+                                                type="text"
+                                                value={data.lokasi_penggunaan}
+                                                onChange={(e) => setData('lokasi_penggunaan', e.target.value)}
+                                                className="w-full rounded-lg border border-slate-200/80 bg-slate-50 px-3 py-2 text-sm dark:border-slate-800 dark:bg-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500 text-slate-800 dark:text-slate-100"
+                                                placeholder="Contoh: Ruang Kelas B.302 / Auditorium Utama"
+                                                required
+                                            />
+                                            {errors.lokasi_penggunaan && <span className="text-xs text-rose-500 mt-1 block">{errors.lokasi_penggunaan}</span>}
+                                        </div>
+                                        <div className="sm:col-span-2">
+                                            <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1 uppercase tracking-wider">Catatan Tambahan (Opsional)</label>
+                                            <textarea
+                                                value={data.catatan}
+                                                onChange={(e) => setData('catatan', e.target.value)}
+                                                className="w-full rounded-lg border border-slate-200/80 bg-slate-50 px-3 py-2 text-sm dark:border-slate-800 dark:bg-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500 text-slate-800 dark:text-slate-100"
+                                                rows="2"
+                                                placeholder="Tuliskan keterangan tambahan bila diperlukan..."
+                                            ></textarea>
+                                            {errors.catatan && <span className="text-xs text-rose-500 mt-1 block">{errors.catatan}</span>}
+                                        </div>
                                     </div>
                                 </div>
 
-                                <div>
-                                    <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1 uppercase tracking-wider">Keperluan / Catatan</label>
-                                    <textarea
-                                        value={data.catatan}
-                                        onChange={(e) => setData('catatan', e.target.value)}
-                                        className="w-full rounded-lg border border-slate-200/80 bg-slate-50 px-3 py-2 text-sm dark:border-slate-800 dark:bg-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500 text-slate-850 dark:text-slate-100"
-                                        rows="3"
-                                        placeholder="Tuliskan alasan peminjaman atau keterangan tambahan..."
-                                    ></textarea>
-                                    {errors.catatan && <span className="text-xs text-rose-500 mt-1 block">{errors.catatan}</span>}
+                                {/* IV. PERSETUJUAN DAN PENGESAHAN */}
+                                <div className="space-y-3 bg-blue-50/50 dark:bg-blue-950/20 p-4 rounded-xl border border-blue-100/50 dark:border-blue-900/50">
+                                    <div className="flex items-center gap-2 border-b border-blue-100/80 dark:border-blue-900/80 pb-1">
+                                        <span className="flex h-5 w-5 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900/40 text-xs font-bold text-blue-600 dark:text-blue-400">IV</span>
+                                        <h4 className="text-xs font-bold text-slate-850 dark:text-slate-205 uppercase tracking-wider">Persetujuan & Pengesahan</h4>
+                                    </div>
+                                    <div className="flex items-start gap-3 mt-2">
+                                        <input
+                                            id="setuju_syarat"
+                                            type="checkbox"
+                                            checked={data.setuju_syarat}
+                                            onChange={(e) => setData('setuju_syarat', e.target.checked)}
+                                            className="mt-1 h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 dark:border-slate-800 dark:bg-slate-950"
+                                            required
+                                        />
+                                        <label htmlFor="setuju_syarat" className="text-xs text-slate-650 dark:text-slate-400 leading-relaxed cursor-pointer select-none">
+                                            <strong>Pernyataan Tanggung Jawab:</strong> Saya menyatakan bertanggung jawab penuh atas seluruh perangkat yang dipinjam, bersedia menjaga perangkat tersebut dengan baik, dan bersedia melakukan perbaikan atau penggantian apabila terjadi kerusakan atau kehilangan karena kelalaian selama masa peminjaman.
+                                        </label>
+                                    </div>
+                                    {errors.setuju_syarat && <span className="text-xs text-rose-500 mt-1 block">{errors.setuju_syarat}</span>}
                                 </div>
 
                                 <div className="flex justify-end gap-3 pt-4 border-t border-slate-100 dark:border-slate-800">

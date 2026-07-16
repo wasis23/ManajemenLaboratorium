@@ -15,19 +15,28 @@ class Peminjaman extends Model
         'user_id',
         'nama_peminjam',
         'kontak_peminjam',
+        'nomor_induk',
+        'prodi_unit',
+        'email_peminjam',
         'aset_id',
         'jumlah',
         'tanggal_pinjam',
+        'jam_pinjam',
         'tanggal_kembali_rencana',
+        'jam_kembali_rencana',
         'tanggal_kembali_aktual',
         'status_peminjaman',
-        'catatan'
+        'tujuan_penggunaan',
+        'lokasi_penggunaan',
+        'catatan',
+        'setuju_syarat'
     ];
 
     protected $casts = [
         'tanggal_pinjam' => 'date',
         'tanggal_kembali_rencana' => 'date',
-        'tanggal_kembali_aktual' => 'date'
+        'tanggal_kembali_aktual' => 'date',
+        'setuju_syarat' => 'boolean',
     ];
 
     public function user()
