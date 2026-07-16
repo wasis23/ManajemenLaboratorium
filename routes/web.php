@@ -14,6 +14,7 @@ use Illuminate\Support\Facades\Route;
 Route::get('/', [PublicController::class, 'index'])->name('public.catalog');
 Route::get('/scan/{kode_aset}', [PublicController::class, 'scan'])->name('public.scan');
 Route::post('/scan/{kode_aset}/report', [PublicController::class, 'report'])->name('public.report');
+Route::post('/scan/{kode_aset}/borrow', [PublicController::class, 'borrow'])->name('public.borrow');
 Route::post('/peminjaman', [ClientLoanController::class, 'store'])->name('peminjaman.store');
 
 // Authenticated User Routes (Dosen / Mahasiswa)

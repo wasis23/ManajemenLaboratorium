@@ -105,6 +105,141 @@ class SimlabTest extends TestCase
     }
 
     /**
+     * Test public QR scan page pulls workstation paired assets.
+     */
+    public function test_public_scan_page_shows_workstation_paired_assets()
+    {
+        $monitor = Aset::create([
+            'laboratorium_id' => $this->lab->id,
+            'kode_aset' => 'LAB01-MN01',
+            'nama_aset' => 'Monitor Samsung',
+            'jenis_aset' => 'Monitor',
+            'kondisi' => 'baik',
+            'stok' => 1,
+        ]);
+
+        $keyboard = Aset::create([
+            'laboratorium_id' => $this->lab->id,
+            'kode_aset' => 'LAB01-KB01',
+            'nama_aset' => 'Keyboard Logitech',
+            'jenis_aset' => 'Keyboard',
+            'kondisi' => 'baik',
+            'stok' => 1,
+        ]);
+
+        $response = $this->get("/scan/{$this->pcAset->kode_aset}");
+        $response->assertStatus(200);
+        $response->assertInertia(fn ($page) => $page
+            ->component('Public/Scan')
+            ->has('workstationAssets', 3)
+        );
+    }
+
+    /**
+     * Test guest can submit a damage report ticket for a specific workstation sub-asset.
+     */
+    public function test_guest_can_report_specific_workstation_asset_damage()
+    {
+        $monitor = Aset::create([
+            'laboratorium_id' => $this->lab->id,
+            'kode_aset' => 'LAB01-MN01',
+            'nama_aset' => 'Monitor Samsung',
+            'jenis_aset' => 'Monitor',
+            'kondisi' => 'baik',
+            'stok' => 1,
+        ]);
+
+        $response = $this->post("/scan/{$this->pcAset->kode_aset}/report", [
+            'aset_id' => $monitor->id,
+            'nama_pelapor' => 'Wasis Reporter',
+            'deskripsi_kerusakan' => 'Layar bergaris warna ungu.',
+        ]);
+
+        $response->assertRedirect();
+        $this->assertDatabaseHas('tickets', [
+            'nama_pelapor' => 'Wasis Reporter',
+            'aset_id' => $monitor->id,
+            'status' => 'dilaporkan',
+        ]);
+    }
+
+    /**
+     * Test public can borrow workstation assets via barcode.
+     */
+    public function test_borrow_workstation_assets_via_barcode()
+    {
+        $monitor = Aset::create([
+            'laboratorium_id' => $this->lab->id,
+            'kode_aset' => 'LAB01-MN01',
+            'nama_aset' => 'Monitor Samsung',
+            'jenis_aset' => 'Monitor',
+            'kondisi' => 'baik',
+            'stok' => 1,
+        ]);
+
+        $response = $this->post("/scan/{$this->pcAset->kode_aset}/borrow", [
+            'nama_peminjam' => 'Dwi Peminjam',
+            'nomor_induk' => '220401',
+            'prodi_unit' => 'Teknik Komputer',
+            'kontak_peminjam' => '0812345678',
+            'email_peminjam' => 'dwi@mail.com',
+            'tanggal_pinjam' => now()->format('Y-m-d H:i'),
+            'tanggal_kembali_rencana' => now()->addHours(3)->format('Y-m-d H:i'),
+            'tujuan_penggunaan' => 'Praktikum Jaringan Komputer',
+            'lokasi_penggunaan' => 'Lab 1',
+            'setuju_syarat' => true,
+        ]);
+
+        $response->assertRedirect();
+        $this->assertDatabaseHas('peminjamans', [
+            'nama_peminjam' => 'Dwi Peminjam',
+            'aset_id' => $this->pcAset->id,
+            'is_barcode' => true,
+            'status_peminjaman' => 'menunggu_persetujuan',
+        ]);
+        $this->assertDatabaseHas('peminjamans', [
+            'nama_peminjam' => 'Dwi Peminjam',
+            'aset_id' => $monitor->id,
+            'is_barcode' => true,
+            'status_peminjaman' => 'menunggu_persetujuan',
+        ]);
+    }
+
+    /**
+     * Test admin can approve barcode loan directly without choosing assets.
+     */
+    public function test_admin_can_approve_barcode_loan_directly()
+    {
+        $loan = Peminjaman::create([
+            'kode_peminjaman' => 'LP-BC-TEST',
+            'nama_peminjam' => 'Dwi Peminjam',
+            'nomor_induk' => '220401',
+            'prodi_unit' => 'Teknik Komputer',
+            'kontak_peminjam' => '0812345678',
+            'email_peminjam' => 'dwi@mail.com',
+            'aset_id' => $this->pcAset->id,
+            'kategori_aset' => $this->pcAset->jenis_aset,
+            'jumlah' => 1,
+            'tanggal_pinjam' => now()->format('Y-m-d'),
+            'tanggal_kembali_rencana' => now()->addDays(2)->format('Y-m-d'),
+            'status_peminjaman' => 'menunggu_persetujuan',
+            'is_barcode' => true,
+            'setuju_syarat' => true,
+        ]);
+
+        $response = $this->actingAs($this->admin)->patch("/admin/peminjaman/{$loan->id}/approve", [
+            'action' => 'approve',
+        ]);
+
+        $response->assertRedirect();
+        $this->assertDatabaseHas('peminjamans', [
+            'id' => $loan->id,
+            'status_peminjaman' => 'dipinjam',
+        ]);
+        $this->assertEquals(0, $this->pcAset->fresh()->stok);
+    }
+
+    /**
      * Test client dashboard accessibility.
      */
     public function test_authenticated_user_can_access_dashboard()

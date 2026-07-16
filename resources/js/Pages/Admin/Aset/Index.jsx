@@ -258,16 +258,20 @@ export default function Index({ asets, laboratoriums, filters }) {
                                     asets.data.map((aset) => (
                                         <tr key={aset.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-900/10">
                                             <td className="px-6 py-4">
-                                                <button
-                                                    onClick={() => openQrModal(aset)}
-                                                    className="font-mono font-bold text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1.5"
-                                                    title="Lihat Label QR Code"
-                                                >
-                                                    <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h.01M16 12h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                                    </svg>
-                                                    {aset.kode_aset}
-                                                </button>
+                                                {aset.jenis_aset === 'PC' ? (
+                                                    <button
+                                                        onClick={() => openQrModal(aset)}
+                                                        className="font-mono font-bold text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1.5"
+                                                        title="Lihat Label QR Code"
+                                                    >
+                                                        <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h.01M16 12h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                                        </svg>
+                                                        {aset.kode_aset}
+                                                    </button>
+                                                ) : (
+                                                    <span className="font-mono font-bold text-slate-600 dark:text-slate-400">{aset.kode_aset}</span>
+                                                )}
                                             </td>
                                             <td className="px-6 py-4">
                                                 <span className="font-bold text-slate-800 dark:text-slate-200 block">{aset.nama_aset}</span>

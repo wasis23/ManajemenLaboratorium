@@ -31,7 +31,8 @@ class Peminjaman extends Model
         'tujuan_penggunaan',
         'lokasi_penggunaan',
         'catatan',
-        'setuju_syarat'
+        'setuju_syarat',
+        'is_barcode'
     ];
 
     protected $casts = [
@@ -39,6 +40,7 @@ class Peminjaman extends Model
         'tanggal_kembali_rencana' => 'date',
         'tanggal_kembali_aktual' => 'date',
         'setuju_syarat' => 'boolean',
+        'is_barcode' => 'boolean',
     ];
 
     public function user()

@@ -8,6 +8,8 @@ use App\Models\Ticket;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
+use App\Models\Peminjaman;
+
 class PublicController extends Controller
 {
     /**
@@ -68,13 +70,29 @@ class PublicController extends Controller
     {
         $aset = Aset::with('laboratorium')->where('kode_aset', $kode_aset)->firstOrFail();
 
-        // Get tickets for this asset that are still active
-        $activeTickets = Ticket::where('aset_id', $aset->id)
+        // Build workstation assets if scanned asset is a PC
+        $workstationAssets = collect([$aset]);
+        if (str_contains($aset->kode_aset, 'PC')) {
+            $monitorCode = str_replace('PC', 'MN', $aset->kode_aset);
+            $keyboardCode = str_replace('PC', 'KB', $aset->kode_aset);
+            $mouseCode = str_replace('PC', 'MO', $aset->kode_aset);
+
+            $paired = Aset::with('laboratorium')
+                ->whereIn('kode_aset', [$monitorCode, $keyboardCode, $mouseCode])
+                ->get();
+
+            $workstationAssets = $workstationAssets->concat($paired);
+        }
+
+        // Get active tickets for any of these workstation assets
+        $assetIds = $workstationAssets->pluck('id')->toArray();
+        $activeTickets = Ticket::whereIn('aset_id', $assetIds)
             ->whereIn('status', ['dilaporkan', 'sedang_diperiksa', 'sedang_diperbaiki'])
             ->get();
 
         return Inertia::render('Public/Scan', [
             'aset' => $aset,
+            'workstationAssets' => $workstationAssets,
             'activeTickets' => $activeTickets,
         ]);
     }
@@ -84,7 +102,13 @@ class PublicController extends Controller
      */
     public function report(Request $request, $kode_aset)
     {
-        $aset = Aset::where('kode_aset', $kode_aset)->firstOrFail();
+        $aset = null;
+        if ($request->has('aset_id')) {
+            $aset = Aset::find($request->aset_id);
+        }
+        if (!$aset) {
+            $aset = Aset::where('kode_aset', $kode_aset)->firstOrFail();
+        }
 
         $request->validate([
             'nama_pelapor' => 'required|string|max:255',
@@ -100,5 +124,64 @@ class PublicController extends Controller
         ]);
 
         return redirect()->back()->with('success', 'Laporan kerusakan berhasil dikirim! Teknisi kami akan segera memeriksa.');
+    }
+
+    /**
+     * Request loan for scanned workstation assets.
+     */
+    public function borrow(Request $request, $kode_aset)
+    {
+        $aset = Aset::where('kode_aset', $kode_aset)->firstOrFail();
+
+        $request->validate([
+            'nama_peminjam' => 'required|string|max:255',
+            'nomor_induk' => 'required|string|max:50',
+            'prodi_unit' => 'required|string|max:100',
+            'kontak_peminjam' => 'required|string|max:30',
+            'email_peminjam' => 'required|email|max:100',
+            'tanggal_pinjam' => 'required|date',
+            'tanggal_kembali_rencana' => 'required|date|after_or_equal:tanggal_pinjam',
+            'tujuan_penggunaan' => 'required|string|max:500',
+            'lokasi_penggunaan' => 'required|string|max:255',
+            'setuju_syarat' => 'required|accepted',
+        ]);
+
+        // Build workstation assets if scanned asset is a PC
+        $workstationAssets = collect([$aset]);
+        if (str_contains($aset->kode_aset, 'PC')) {
+            $monitorCode = str_replace('PC', 'MN', $aset->kode_aset);
+            $keyboardCode = str_replace('PC', 'KB', $aset->kode_aset);
+            $mouseCode = str_replace('PC', 'MO', $aset->kode_aset);
+
+            $paired = Aset::whereIn('kode_aset', [$monitorCode, $keyboardCode, $mouseCode])->get();
+            $workstationAssets = $workstationAssets->concat($paired);
+        }
+
+        // Generate unique LP-BC-XXXXXXXX code
+        $transactionCode = 'LP-BC-' . strtoupper(bin2hex(random_bytes(4)));
+
+        foreach ($workstationAssets as $item) {
+            Peminjaman::create([
+                'kode_peminjaman' => $transactionCode,
+                'user_id' => auth()->id(),
+                'nama_peminjam' => $request->nama_peminjam,
+                'nomor_induk' => $request->nomor_induk,
+                'prodi_unit' => $request->prodi_unit,
+                'kontak_peminjam' => $request->kontak_peminjam,
+                'email_peminjam' => $request->email_peminjam,
+                'aset_id' => $item->id,
+                'kategori_aset' => $item->jenis_aset,
+                'jumlah' => 1,
+                'tanggal_pinjam' => $request->tanggal_pinjam,
+                'tanggal_kembali_rencana' => $request->tanggal_kembali_rencana,
+                'status_peminjaman' => 'menunggu_persetujuan',
+                'tujuan_penggunaan' => $request->tujuan_penggunaan,
+                'lokasi_penggunaan' => $request->lokasi_penggunaan,
+                'is_barcode' => true,
+                'setuju_syarat' => true,
+            ]);
+        }
+
+        return redirect()->back()->with('success', 'Pengajuan peminjaman via barcode berhasil diajukan! Hubungi admin untuk persetujuan.');
     }
 }

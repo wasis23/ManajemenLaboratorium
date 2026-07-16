@@ -230,12 +230,21 @@ export default function AdminDashboard({ assetStats, ticketStats, labs, pendingL
                                             >
                                                 Tolak
                                             </button>
-                                            <Link
-                                                href={route('admin.peminjaman.index', { status: 'menunggu_persetujuan' })}
-                                                className="rounded bg-emerald-50 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-450 px-3 py-1 font-bold transition hover:bg-emerald-100 flex items-center"
-                                            >
-                                                Pilih Aset & Approve
-                                            </Link>
+                                            {loan.is_barcode ? (
+                                                <button
+                                                    onClick={() => handleLoanAction(loan.id, 'approve')}
+                                                    className="rounded bg-emerald-50 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-450 px-3 py-1 font-bold transition hover:bg-emerald-100"
+                                                >
+                                                    Setujui Langsung
+                                                </button>
+                                            ) : (
+                                                <Link
+                                                    href={route('admin.peminjaman.index', { status: 'menunggu_persetujuan' })}
+                                                    className="rounded bg-emerald-50 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-450 px-3 py-1 font-bold transition hover:bg-emerald-100 flex items-center"
+                                                >
+                                                    Pilih Aset & Approve
+                                                </Link>
+                                            )}
                                         </div>
                                     </div>
                                 ))}

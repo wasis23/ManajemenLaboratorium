@@ -66,6 +66,7 @@ class AdminLoanController extends Controller
                 'kategori_aset' => $first->kategori_aset,
                 'jumlah' => $first->jumlah,
                 'aset' => $first->aset,
+                'is_barcode' => $first->is_barcode,
             ]);
         }
 
@@ -103,6 +104,37 @@ class AdminLoanController extends Controller
         $action = $request->input('action'); // 'approve', 'reject', 'return'
 
         if ($action === 'approve') {
+            // Direct approval for barcode-based grouped loans
+            if ($loan->is_barcode) {
+                if ($loan->status_peminjaman !== 'menunggu_persetujuan') {
+                    return redirect()->back()->with('error', 'Transaksi tidak sedang menunggu persetujuan.');
+                }
+
+                $groupItems = Peminjaman::where('kode_peminjaman', $loan->kode_peminjaman)
+                    ->where('status_peminjaman', 'menunggu_persetujuan')
+                    ->get();
+
+                foreach ($groupItems as $item) {
+                    if (!$item->aset_id) {
+                        return redirect()->back()->with('error', 'Salah satu aset fisik belum ditentukan untuk peminjaman ini.');
+                    }
+                    $aset = Aset::findOrFail($item->aset_id);
+                    if ($aset->stok < $item->jumlah) {
+                        return redirect()->back()->with('error', "Stok aset {$aset->nama_aset} tidak mencukupi untuk disetujui.");
+                    }
+                }
+
+                foreach ($groupItems as $item) {
+                    $aset = Aset::findOrFail($item->aset_id);
+                    $aset->decrement('stok', $item->jumlah);
+                    $item->update([
+                        'status_peminjaman' => 'dipinjam',
+                    ]);
+                }
+
+                return redirect()->back()->with('success', 'Peminjaman via barcode berhasil disetujui.');
+            }
+
             if ($request->has('allocations')) {
                 $request->validate([
                     'allocations' => 'required|array',

@@ -3,6 +3,7 @@ import { Head, Link, router } from '@inertiajs/react';
 import { useState } from 'react';
 
 export default function Index({ loans, assets = [], filters }) {
+    const [activeSubTab, setActiveSubTab] = useState('form');
     const [approvingGroup, setApprovingGroup] = useState(null);
     const [groupAllocations, setGroupAllocations] = useState({});
 
@@ -39,6 +40,8 @@ export default function Index({ loans, assets = [], filters }) {
         });
         setGroupAllocations(initialAllocations);
     };
+
+    const displayLoans = loans.data.filter(l => activeSubTab === 'barcode' ? l.is_barcode : !l.is_barcode);
 
     return (
         <AuthenticatedLayout
@@ -83,6 +86,36 @@ export default function Index({ loans, assets = [], filters }) {
                     ))}
                 </div>
 
+                {/* Sub Tab selection */}
+                <div className="flex border-b border-slate-200 dark:border-slate-800">
+                    <button
+                        onClick={() => {
+                            setActiveSubTab('form');
+                            setApprovingGroup(null);
+                        }}
+                        className={`px-5 py-3 text-xs font-bold uppercase tracking-wider border-b-2 transition ${
+                            activeSubTab === 'form'
+                                ? 'border-blue-600 text-blue-600 dark:text-blue-400 bg-slate-50/50 dark:bg-slate-900/20'
+                                : 'border-transparent text-slate-550 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200'
+                        }`}
+                    >
+                        📝 Form Peminjaman (Kategori)
+                    </button>
+                    <button
+                        onClick={() => {
+                            setActiveSubTab('barcode');
+                            setApprovingGroup(null);
+                        }}
+                        className={`px-5 py-3 text-xs font-bold uppercase tracking-wider border-b-2 transition ${
+                            activeSubTab === 'barcode'
+                                ? 'border-indigo-600 text-indigo-650 dark:text-indigo-400 bg-slate-50/50 dark:bg-slate-900/20'
+                                : 'border-transparent text-slate-550 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200'
+                        }`}
+                    >
+                        📷 Scan Barcode (Aset Spesifik)
+                    </button>
+                </div>
+
                 {/* Loans Table */}
                 <div className="rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-950 overflow-hidden">
                     <div className="overflow-x-auto">
@@ -100,14 +133,14 @@ export default function Index({ loans, assets = [], filters }) {
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-slate-100 dark:divide-slate-900 font-medium">
-                                {loans.data.length === 0 ? (
+                                {displayLoans.length === 0 ? (
                                     <tr>
                                         <td colSpan="8" className="px-6 py-10 text-center text-slate-500">
                                             Tidak ada riwayat peminjaman barang dengan status ini.
                                         </td>
                                     </tr>
                                 ) : (
-                                    loans.data.map((loan) => (
+                                    displayLoans.map((loan) => (
                                         <tr key={loan.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-900/10 align-top">
                                             <td className="px-6 py-4">
                                                 {loan.user ? (
@@ -198,7 +231,22 @@ export default function Index({ loans, assets = [], filters }) {
                                             <td className="px-6 py-4 text-right space-x-2 whitespace-nowrap">
                                                 {loan.status_peminjaman === 'menunggu_persetujuan' && (
                                                     <>
-                                                        {approvingGroup === loan.id ? (
+                                                        {loan.is_barcode ? (
+                                                            <>
+                                                                <button
+                                                                    onClick={() => handleLoanAction(loan.id, 'reject')}
+                                                                    className="text-xs font-semibold text-rose-600 hover:text-rose-800 dark:text-rose-400 mr-2.5"
+                                                                >
+                                                                    Tolak
+                                                                </button>
+                                                                <button
+                                                                    onClick={() => handleLoanAction(loan.id, 'approve')}
+                                                                    className="text-xs font-semibold text-emerald-600 hover:text-emerald-800 dark:text-emerald-400"
+                                                                >
+                                                                    Approve Peminjaman
+                                                                </button>
+                                                            </>
+                                                        ) : approvingGroup === loan.id ? (
                                                             <div className="inline-flex flex-col gap-2 bg-white dark:bg-slate-900 p-3 rounded-lg border border-slate-200 dark:border-slate-800 shadow-sm max-w-xs text-left">
                                                                 <span className="font-bold text-slate-700 dark:text-slate-200 block text-[10px] uppercase tracking-wider">
                                                                     Alokasikan Aset:

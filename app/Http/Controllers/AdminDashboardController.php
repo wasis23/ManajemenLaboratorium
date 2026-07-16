@@ -85,6 +85,7 @@ class AdminDashboardController extends Controller
                 'aset' => $first->aset,
                 'kategori_aset' => $first->kategori_aset,
                 'jumlah' => $first->jumlah,
+                'is_barcode' => $first->is_barcode,
             ]);
         }
 
